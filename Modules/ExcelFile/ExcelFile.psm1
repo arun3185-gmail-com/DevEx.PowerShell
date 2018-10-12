@@ -7,6 +7,15 @@ Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\l
 [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $Script:XlDoc = $null
 [System.Reflection.MethodInfo] $Script:AddNewPartMethodInfo = $null
 
+<#
+[DocumentFormat.OpenXml.Packaging.WorkbookPart] $Script:WbPart = $null
+[DocumentFormat.OpenXml.Spreadsheet.Workbook] $Script:Wb = $null
+[DocumentFormat.OpenXml.Packaging.WorksheetPart] $Script:WsPart = $null
+[DocumentFormat.OpenXml.Spreadsheet.Worksheet] $Script:Ws = $null
+[DocumentFormat.OpenXml.Spreadsheet.SheetData] $Script:SheetData = $null
+[DocumentFormat.OpenXml.Spreadsheet.Sheets] $Script:Sheets = $null
+[DocumentFormat.OpenXml.Spreadsheet.Sheet] $Script:Sheet = $null
+#>
 
 ################################################################################################################################################################
 
@@ -129,7 +138,7 @@ Function Get-Sheet()
     Return $wsPart
 }
 
-Function Get-Cell()
+Function Get-Row()
 {
     [CmdletBinding()]
     Param
@@ -138,28 +147,56 @@ Function Get-Cell()
         [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $Ws,
 
         [Parameter(Mandatory = $true)]
-        [System.UInt32] $RowIndex,
-
-        [Parameter(Mandatory = $true)]
-        [string] $ColumnName
+        [System.UInt32] $RowIndex
     )
 
 
     [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = $null
+    [DocumentFormat.OpenXml.Spreadsheet.Row] $row = $null
 
     [System.Reflection.MethodInfo] $getFirstChildMethodInfo = [DocumentFormat.OpenXml.Spreadsheet.Worksheet].GetMethod("GetFirstChild", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Spreadsheet.SheetData])
     [Type[]] $emptyTypeArray = @()
 
     $sheetData = $getFirstChildMethodInfo.Invoke($Ws, @())
 
+    $row = $sheetData.ChildElements.Where( { $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Row] -and $_.RowIndex -eq $RowIndex} ).First()
+
     
+    Return $row
+}
+
+Function Get-Cell()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [DocumentFormat.OpenXml.Spreadsheet.Row] $Row,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ColumnName
+    )
+
+
+    [DocumentFormat.OpenXml.Spreadsheet.Cell] $cell = $null
+    
+    $cell = $Row.ChildElements.Where( { $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Cell] -and $_.CellReference.Value -eq  "$($ColumnName)$($Row.RowIndex)"} ).First()
+
+    Return $cell
 }
 
 
 Function Save-ExcelFile()
 {
-    $wbPart.Workbook.Save()
-    if ($Script:XlDoc -ne $null) { $Script:XlDoc.Close(); $Script:XlDoc.Dispose() }
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $XlDoc
+    )
+
+    $XlDoc.WorkbookPart.Workbook.Save()
+    if ($XlDoc -ne $null) { $XlDoc.Close(); $XlDoc.Dispose() }
 }
 
 ################################################################################################################################################################
