@@ -1,9 +1,8 @@
 
 ################################################################################################################################################################
-Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
+Import-Module "F:\Arun\Git\DevEx.References\NuPkg\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
 
-[string] $Script:XlFilePath = "F:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
 [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $Script:XlDoc = $null
 [System.Reflection.MethodInfo] $Script:AddNewPartMethodInfo = $null
 
@@ -161,6 +160,11 @@ Function Get-Row()
 
     $row = $sheetData.ChildElements.Where( { $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Row] -and $_.RowIndex -eq $RowIndex} ).First()
 
+    if ($row -eq $null)
+    {
+        $row = New-Object DocumentFormat.OpenXml.Spreadsheet.Row
+        $row.RowIndex = $RowIndex
+    }
     
     Return $row
 }
@@ -181,6 +185,13 @@ Function Get-Cell()
     [DocumentFormat.OpenXml.Spreadsheet.Cell] $cell = $null
     
     $cell = $Row.ChildElements.Where( { $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Cell] -and $_.CellReference.Value -eq  "$($ColumnName)$($Row.RowIndex)"} ).First()
+
+    if ($cell -eq $null)
+    {
+        $cell = New-Object DocumentFormat.OpenXml.Spreadsheet.Cell
+        $cell.CellReference = "$($ColumnName)$($Row.RowIndex)"
+        $row.AppendChild($cell)
+    }
 
     Return $cell
 }
