@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
@@ -127,6 +127,32 @@ Function Get-Sheet()
     $wsPart = $wbPart.GetPartById($sheet.Id.Value)
 
     Return $wsPart
+}
+
+Function Get-Cell()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $Ws,
+
+        [Parameter(Mandatory = $true)]
+        [System.UInt32] $RowIndex,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ColumnName
+    )
+
+
+    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = $null
+
+    [System.Reflection.MethodInfo] $getFirstChildMethodInfo = [DocumentFormat.OpenXml.Spreadsheet.Worksheet].GetMethod("GetFirstChild", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Spreadsheet.SheetData])
+    [Type[]] $emptyTypeArray = @()
+
+    $sheetData = $getFirstChildMethodInfo.Invoke($Ws, @())
+
+    
 }
 
 
