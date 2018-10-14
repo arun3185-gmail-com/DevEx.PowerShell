@@ -3,11 +3,12 @@
 Import-Module "F:\Arun\Git\DevEx.References\NuPkg\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
 
-[DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $Script:XlDoc = $null
+[DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $Script:SpreadSheetDoc = $null
+[DocumentFormat.OpenXml.Packaging.WorkbookPart] $Script:WbPart = $null
 [System.Reflection.MethodInfo] $Script:AddNewPartMethodInfo = $null
 
 <#
-[DocumentFormat.OpenXml.Packaging.WorkbookPart] $Script:WbPart = $null
+
 [DocumentFormat.OpenXml.Spreadsheet.Workbook] $Script:Wb = $null
 [DocumentFormat.OpenXml.Packaging.WorksheetPart] $Script:WsPart = $null
 [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $Script:Ws = $null
@@ -28,12 +29,11 @@ Function Create-ExcelFile()
     )
 
 
-    $Script:XlDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($FilePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
-    $wbPart = $Script:XlDoc.AddWorkbookPart()
-    $wbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
+    $Script:SpreadSheetDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($FilePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
+    $Script:WbPart = $Script:SpreadSheetDoc.AddWorkbookPart()
+    $Script:WbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
     
-    
-    Return $Script:XlDoc
+    Return $Script:SpreadSheetDoc
 }
 
 
@@ -50,15 +50,15 @@ Function Open-ExcelFile()
     )
 
 
-    $Script:XlDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($FilePath, $IsEditable)
-    if ($Script:XlDoc.WorkbookPart -eq $null)
+    $Script:SpreadSheetDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($FilePath, $IsEditable)
+    if ($Script:SpreadSheetDoc.WorkbookPart -eq $null)
     {
-        $wbPart = $Script:XlDoc.AddWorkbookPart()
-        $wbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
+        $Script:WbPart = $Script:SpreadSheetDoc.AddWorkbookPart()
+        $Script:WbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
     }
 
     
-    Return $Script:XlDoc
+    Return $Script:SpreadSheetDoc
 }
 
 
