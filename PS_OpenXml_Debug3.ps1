@@ -2,17 +2,17 @@
 ################################################################################################################################################################
 # Open Xml debug 3
 ################################################################################################################################################################
-Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
+Import-Module "F:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
 
 
-Function Create-ExcelFile()
+Function Add-ExcelSheet()
 {
     [CmdletBinding()]
     Param
     (
         [Parameter(Mandatory = $true)]
-        [string] $FilePath,
+        [ref] $ExcelDocRef,
 
         [Parameter(Mandatory = $false)]
         [string] $DefaultSheetName = "Sheet1"
@@ -22,8 +22,8 @@ Function Create-ExcelFile()
     [System.Reflection.MethodInfo] $AddNewPartMethodInfo = [DocumentFormat.OpenXml.Packaging.WorkbookPart].GetMethod("AddNewPart", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Packaging.WorksheetPart])
 
 
-    [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $XlDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($FilePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
-    [DocumentFormat.OpenXml.Packaging.WorkbookPart] $wbPart = $XlDoc.AddWorkbookPart()
+    
+    [DocumentFormat.OpenXml.Packaging.WorkbookPart] $wbPart = $ExcelDocRef.Value.AddWorkbookPart()
     $wbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
     
     [DocumentFormat.OpenXml.Packaging.WorksheetPart] $wsPart = $AddNewPartMethodInfo.Invoke($wbPart, @())
@@ -40,41 +40,45 @@ Function Create-ExcelFile()
     $sheets = $wbPart.Workbook.AppendChild($sheets)
     $sheets.Append($defaultSheet)
     
-    $XlDoc.WorkbookPart.Workbook.Save()
-
-    Return $XlDoc
+    $ExcelDocRef.Value.WorkbookPart.Workbook.Save()
 }
 
 
-Function Open-ExcelFile()
+Function Set-ExcelRow()
 {
     [CmdletBinding()]
     Param
     (
         [Parameter(Mandatory = $true)]
-        [string] $FilePath,
-        
-        [Parameter(Mandatory = $true)]
-        [bool] $IsEditable,
+        [ref] $ExcelSheetDataRef,
 
-        [Parameter(Mandatory = $false)]
-        [string] $DefaultSheetName = "Sheet1"
+        [Parameter(Mandatory = $true)]
+        [System.UInt32] $RowIndex
     )
-
-    [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $XlDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($FilePath, $IsEditable)    
-
-    Return $XlDoc
 }
 
-
-
-Function Get-WorkSheet()
+Function Set-ExcelCell()
 {
     [CmdletBinding()]
     Param
     (
         [Parameter(Mandatory = $true)]
-        [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $XlDoc,
+        [ref] $ExcelRowRef,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ColumnName
+    )
+}
+
+
+
+Function Get-ExcelSheet()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ref] $ExcelDocRef,
 
         [Parameter(Mandatory = $true)]
         [string] $SheetName
@@ -231,12 +235,13 @@ Function GetDataTable()
 [string] $filePath = "D:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
 [string] $sheetName = "SheetOne"
 [System.UInt32] $rowIndex = 1
-
+[DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $excelDoc = $null
 
 Try
 {
-    
-    $excelDoc = Create-ExcelFile -FilePath $filePath -DefaultSheetName $sheetName
+    $excelDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($filePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
+    Init-ExcelFile -ExcelDocRef ([ref]$excelDoc) -DefaultSheetName $sheetName
+
     # $excelDoc = Open-ExcelFile -FilePath $filePath -IsEditable $true
     $wkSheet = Get-WorkSheet -XlDoc $excelDoc -SheetName $sheetName
     $sheetDt = Get-SheetData -Worksheet $wkSheet
