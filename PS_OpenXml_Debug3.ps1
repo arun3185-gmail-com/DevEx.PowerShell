@@ -1,8 +1,8 @@
-﻿
+
 ################################################################################################################################################################
-# PowerShell Open Xml 3
+# Open Xml debug 3
 ################################################################################################################################################################
-Import-Module "F:\Arun\Git\DevEx.References\NuPkg\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
 
 
@@ -78,13 +78,35 @@ Function Get-WorkSheet()
 
         [Parameter(Mandatory = $true)]
         [string] $SheetName
-    )    
+    )
+
+
+    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $defaultSheet = $null
     
-    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $defaultSheet = $XlDoc.WorkbookPart.Workbook.ChildElements.Where({ $_.Name -eq $SheetName }).First
+    for ([int] $i = 0; $i -lt $XlDoc.WorkbookPart.Workbook.ChildElements.Count; $i++)
+    {
+        if ($XlDoc.WorkbookPart.Workbook.ChildElements.GetItem($i).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheets])
+        {
+            [DocumentFormat.OpenXml.OpenXmlCompositeElement] $oxce = $XlDoc.WorkbookPart.Workbook.ChildElements.GetItem($i)
+            for ([int] $j = 0; $j -lt $oxce.ChildElements.Count; $j++)
+            {
+                if ($oxce.ChildElements.GetItem($j).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheet])
+                {
+                    [DocumentFormat.OpenXml.OpenXmlLeafElement] $oxle = $oxce.ChildElements.GetItem($j)
+                    $defaultSheet = $oxle
+                    break
+                }
+            }
+
+        }
+        if ($defaultSheet -ne $null) { break; }
+    }
+
     [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $defaultWorkSheet = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$XlDoc.WorkbookPart.GetPartById($defaultSheet.Id)).Worksheet
     
     Return $defaultWorkSheet
 }
+
 
 Function Get-SheetData()
 {
@@ -102,6 +124,7 @@ Function Get-SheetData()
 
     Return $defaultSheetData
 }
+
 
 Function Get-Row()
 {
@@ -126,6 +149,7 @@ Function Get-Row()
     
     Return $row
 }
+
 
 Function Get-Cell()
 {
@@ -166,6 +190,7 @@ Function Save-ExcelFile()
     if ($XlDoc -ne $null) { $XlDoc.Close(); $XlDoc.Dispose() }
 }
 
+
 <#
 Function GetDataTable()
 {
@@ -202,20 +227,46 @@ Function GetDataTable()
 
 ################################################################################################################################################################
 
+
+[string] $filePath = "D:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
+[string] $sheetName = "SheetOne"
+[System.UInt32] $rowIndex = 1
+
+
 Try
 {
-    [string] $filePath = "F:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
-    [string] $sheetName = "SheetOne"
-    [System.UInt32] $rowIndex = 1
-
+    
     $excelDoc = Create-ExcelFile -FilePath $filePath -DefaultSheetName $sheetName
     # $excelDoc = Open-ExcelFile -FilePath $filePath -IsEditable $true
     $wkSheet = Get-WorkSheet -XlDoc $excelDoc -SheetName $sheetName
     $sheetDt = Get-SheetData -Worksheet $wkSheet
 
-    # $excelDoc.WorkbookPart.Workbook.Sheets.ChildElements.Where({ $_.Name -eq $sheetName }, "First", 1)
-    
     <##>
+
+    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $defaultSheet = $null
+
+    for ([int] $i = 0; $i -lt $excelDoc.WorkbookPart.Workbook.ChildElements.Count; $i++)
+    {
+        if ($excelDoc.WorkbookPart.Workbook.ChildElements.GetItem($i).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheets])
+        {
+            [DocumentFormat.OpenXml.OpenXmlCompositeElement] $oxce = $excelDoc.WorkbookPart.Workbook.ChildElements.GetItem($i)
+            for ([int] $j = 0; $j -lt $oxce.ChildElements.Count; $j++)
+            {
+                if ($oxce.ChildElements.GetItem($j).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheet])
+                {
+                    [DocumentFormat.OpenXml.OpenXmlLeafElement] $oxle = $oxce.ChildElements.GetItem($j)
+                    $defaultSheet = $oxle
+                    break
+                }
+            }
+
+        }
+    }
+
+    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $defaultWorkSheet = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$excelDoc.WorkbookPart.GetPartById($defaultSheet.Id)).Worksheet
+
+    
+
 
     $txt = New-Object DocumentFormat.OpenXml.Spreadsheet.Text
     $txt.Text = "Test"
