@@ -2,77 +2,34 @@
 ################################################################################################################################################################
 # Open Xml debug 3
 ################################################################################################################################################################
-Import-Module "F:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\documentformat.openxml.2.8.1\lib\net40\DocumentFormat.OpenXml.dll"
 ################################################################################################################################################################
 
 
-Function Add-ExcelSheet()
+Function Init-Excel()
 {
     [CmdletBinding()]
     Param
     (
         [Parameter(Mandatory = $true)]
-        [ref] $ExcelDocRef,
-
-        [Parameter(Mandatory = $false)]
-        [string] $DefaultSheetName = "Sheet1"
+        [ref] $ExcelDocRef
     )
 
     [Type[]] $emptyTypeArray = @()
     [System.Reflection.MethodInfo] $AddNewPartMethodInfo = [DocumentFormat.OpenXml.Packaging.WorkbookPart].GetMethod("AddNewPart", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Packaging.WorksheetPart])
+    [DocumentFormat.OpenXml.Packaging.WorkbookPart] $wbPart = $null
 
-
-    
-    [DocumentFormat.OpenXml.Packaging.WorkbookPart] $wbPart = $ExcelDocRef.Value.AddWorkbookPart()
-    $wbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
-    
-    [DocumentFormat.OpenXml.Packaging.WorksheetPart] $wsPart = $AddNewPartMethodInfo.Invoke($wbPart, @())
-    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $defaultSheetData = New-Object DocumentFormat.OpenXml.Spreadsheet.SheetData
-    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $defaultWorkSheet = New-Object DocumentFormat.OpenXml.Spreadsheet.Worksheet($defaultSheetData)
-    $wsPart.Worksheet = $defaultWorkSheet
-
-    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $defaultSheet = New-Object DocumentFormat.OpenXml.Spreadsheet.Sheet
-    $defaultSheet.Id = $wbPart.GetIdOfPart($wsPart)
-    $defaultSheet.SheetId = [uint32]1
-    $defaultSheet.Name = $DefaultSheetName
-
-    [DocumentFormat.OpenXml.Spreadsheet.Sheets] $sheets = New-Object DocumentFormat.OpenXml.Spreadsheet.Sheets
-    $sheets = $wbPart.Workbook.AppendChild($sheets)
-    $sheets.Append($defaultSheet)
+    if ($ExcelDocRef.Value.WorkbookPart -eq $null)
+    {
+        $wbPart = $ExcelDocRef.Value.AddWorkbookPart()
+        $wbPart.Workbook = New-Object DocumentFormat.OpenXml.Spreadsheet.Workbook
+    }
     
     $ExcelDocRef.Value.WorkbookPart.Workbook.Save()
 }
 
 
-Function Set-ExcelRow()
-{
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory = $true)]
-        [ref] $ExcelSheetDataRef,
-
-        [Parameter(Mandatory = $true)]
-        [System.UInt32] $RowIndex
-    )
-}
-
-Function Set-ExcelCell()
-{
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory = $true)]
-        [ref] $ExcelRowRef,
-
-        [Parameter(Mandatory = $true)]
-        [string] $ColumnName
-    )
-}
-
-
-
-Function Get-ExcelSheet()
+Function New-ExcelSheet()
 {
     [CmdletBinding()]
     Param
@@ -84,53 +41,84 @@ Function Get-ExcelSheet()
         [string] $SheetName
     )
 
+    [Type[]] $emptyTypeArray = @()
+    [System.Reflection.MethodInfo] $AddNewPartMethodInfo = [DocumentFormat.OpenXml.Packaging.WorkbookPart].GetMethod("AddNewPart", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Packaging.WorksheetPart])
 
-    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $defaultSheet = $null
-    
-    for ([int] $i = 0; $i -lt $XlDoc.WorkbookPart.Workbook.ChildElements.Count; $i++)
+    [uint32] $maxSheetId = 1
+    if ($ExcelDocRef.Value.WorkbookPart.Workbook.Sheets.ChildElements.Count -gt 0)
     {
-        if ($XlDoc.WorkbookPart.Workbook.ChildElements.GetItem($i).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheets])
-        {
-            [DocumentFormat.OpenXml.OpenXmlCompositeElement] $oxce = $XlDoc.WorkbookPart.Workbook.ChildElements.GetItem($i)
-            for ([int] $j = 0; $j -lt $oxce.ChildElements.Count; $j++)
-            {
-                if ($oxce.ChildElements.GetItem($j).GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.Sheet])
-                {
-                    [DocumentFormat.OpenXml.OpenXmlLeafElement] $oxle = $oxce.ChildElements.GetItem($j)
-                    $defaultSheet = $oxle
-                    break
-                }
-            }
-
-        }
-        if ($defaultSheet -ne $null) { break; }
+        $maxSheetId = ($ExcelDocRef.Value.WorkbookPart.Workbook.Sheets | Sort-Object -Property SheetId | Select-Object -Last 1).SheetId.Value
+        $maxSheetId++
     }
-
-    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $defaultWorkSheet = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$XlDoc.WorkbookPart.GetPartById($defaultSheet.Id)).Worksheet
     
-    Return $defaultWorkSheet
+    [DocumentFormat.OpenXml.Packaging.WorkbookPart] $wbPart = $ExcelDocRef.Value.WorkbookPart
+    [DocumentFormat.OpenXml.Packaging.WorksheetPart] $wsPart = $AddNewPartMethodInfo.Invoke($wbPart, @())
+
+    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = New-Object DocumentFormat.OpenXml.Spreadsheet.SheetData
+    $wsPart.Worksheet = New-Object DocumentFormat.OpenXml.Spreadsheet.Worksheet($sheetData)
+    
+    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $sheet = New-Object DocumentFormat.OpenXml.Spreadsheet.Sheet
+    $sheet.Id = $wbPart.GetIdOfPart($wsPart)
+    $sheet.SheetId = $maxSheetId
+    $sheet.Name = $SheetName
+
+    [DocumentFormat.OpenXml.Spreadsheet.Sheets] $sheets = New-Object DocumentFormat.OpenXml.Spreadsheet.Sheets
+    $sheets = $wbPart.Workbook.AppendChild($sheets)
+    $sheets.Append($sheet)
+
+    Return $sheetData
 }
 
 
-Function Get-SheetData()
+Function Delete-ExcelSheet()
 {
     [CmdletBinding()]
     Param
     (
         [Parameter(Mandatory = $true)]
-        [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $Worksheet
-    )
-    
-    [Type[]] $emptyTypeArray = @()
-    [System.Reflection.MethodInfo] $getFirstChildMethodInfo = [DocumentFormat.OpenXml.Spreadsheet.Worksheet].GetMethod("GetFirstChild", $emptyTypeArray).MakeGenericMethod([DocumentFormat.OpenXml.Spreadsheet.SheetData])
-    
-    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $defaultSheetData = $getFirstChildMethodInfo.Invoke($Worksheet, @())
+        [ref] $ExcelDocRef,
 
-    Return $defaultSheetData
+        [Parameter(Mandatory = $true)]
+        [string] $SheetName
+    )
 }
 
 
-Function Get-Row()
+Function Get-ExcelSheetData()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ref] $ExcelDocRef,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SheetName
+    )
+    
+    [DocumentFormat.OpenXml.Spreadsheet.Sheet[]] $qSheets = $null
+    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $sheet = $null
+    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $ws = $null
+    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = $null
+
+    $qSheets = $ExcelDocRef.Value.WorkbookPart.Workbook.Sheets.Where({ $_.Name.HasValue -and $_.Name.Value -eq $SheetName })
+    if ($qSheets.Count -ge 1)
+    {
+        $sheet = $qSheets[0]
+    }
+
+    $ws = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$excelDoc.WorkbookPart.GetPartById($sheet.Id)).Worksheet
+    $qSheetDatas = $ws.ChildElements.Where({ $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.SheetData] })
+    if ($qSheetDatas.Count -ge 1)
+    {
+        $sheetData = $qSheetDatas[0]
+    }
+    
+    Return $sheetData
+}
+
+
+Function Get-ExcelRow()
 {
     [CmdletBinding()]
     Param
@@ -155,7 +143,21 @@ Function Get-Row()
 }
 
 
-Function Get-Cell()
+Function Set-ExcelRow()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ref] $ExcelSheetDataRef,
+
+        [Parameter(Mandatory = $true)]
+        [System.UInt32] $RowIndex
+    )
+}
+
+
+Function Get-ExcelCell()
 {
     [CmdletBinding()]
     Param
@@ -178,6 +180,20 @@ Function Get-Cell()
     }
 
     Return $cell
+}
+
+
+Function Set-ExcelCell()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [ref] $ExcelRowRef,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ColumnName
+    )
 }
 
 
@@ -233,16 +249,23 @@ Function GetDataTable()
 
 
 [string] $filePath = "D:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
+[string] $filePath1 = "D:\Arun\Git\DevEx.Data\TestExcel.xlsx"
 [string] $sheetName = "SheetOne"
 [System.UInt32] $rowIndex = 1
+[bool] $isEditable = $true
 [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $excelDoc = $null
 
 Try
 {
     $excelDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($filePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
-    Init-ExcelFile -ExcelDocRef ([ref]$excelDoc) -DefaultSheetName $sheetName
+    $excelDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($filePath1, $isEditable)
 
-    # $excelDoc = Open-ExcelFile -FilePath $filePath -IsEditable $true
+    Init-ExcelFile -ExcelDocRef ([ref]$excelDoc) -DefaultSheetName $sheetName
+    
+    
+    [uint32] $maxSheetId = ($excelDoc.WorkbookPart.Workbook.Sheets | Sort-Object -Property SheetId | Select-Object -Last 1).SheetId.Value
+    
+
     $wkSheet = Get-WorkSheet -XlDoc $excelDoc -SheetName $sheetName
     $sheetDt = Get-SheetData -Worksheet $wkSheet
 
@@ -291,7 +314,8 @@ Catch
 }
 Finally
 {
-
+    $excelDoc.WorkbookPart.Workbook.Save()
+    if ($excelDoc -ne $null) { $excelDoc.Close(); $excelDoc.Dispose() }
 }
 
 ################################################################################################################################################################
