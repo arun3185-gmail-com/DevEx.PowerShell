@@ -95,13 +95,14 @@ Function Delete-ExcelSheet()
     {
         $sheet = $qSheets[0]
     }
+
     $wsPart = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$ExcelDocRef.Value.WorkbookPart.GetPartById($sheet.Id))
     $sheet.Remove()
     $wbPart.DeletePart($wsPart)
 }
 
 
-Function Get-ExcelSheetData()
+Function Get-ExcelWorkSheetPart()
 {
     [CmdletBinding()]
     Param
@@ -113,29 +114,19 @@ Function Get-ExcelSheetData()
         [string] $SheetName
     )
     
-    
     [DocumentFormat.OpenXml.Spreadsheet.Sheet[]] $qSheets = $null
     [DocumentFormat.OpenXml.Spreadsheet.Sheet] $sheet = $null
-    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $ws = $null
-    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = $null
+    [DocumentFormat.OpenXml.Packaging.WorksheetPart] $wsPart = $null
 
     $qSheets = $ExcelDocRef.Value.WorkbookPart.Workbook.Sheets.Where({ $_.Name.HasValue -and $_.Name.Value -eq $SheetName })
     
     if ($qSheets.Count -ge 1)
     {
         $sheet = $qSheets[0]
-        
-        $ws = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$ExcelDocRef.Value.WorkbookPart.GetPartById($sheet.Id)).Worksheet
-        
-        $qSheetDatas = $ws.Where({ $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.SheetData] })
-        
-        if ($qSheetDatas.Count -ge 1)
-        {
-            $sheetData = $qSheetDatas[0]
-        }
+        $wsPart = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$ExcelDocRef.Value.WorkbookPart.GetPartById($sheet.Id))
     }
-    
-    Return $qSheetDatas
+
+    Return $wsPart
 }
 
 
@@ -280,7 +271,7 @@ Function GetDataTable()
 
 [string] $filePath = "D:\Arun\Git\DevEx.Data\OpenXmlSheet.xlsx"
 [string] $filePath1 = "D:\Arun\Git\DevEx.Data\TestExcel.xlsx"
-[string] $sheetName = "SheetOne"
+[string] $sheetName = "Sheet2"
 [System.UInt32] $rowIndex = 1
 [bool] $isEditable = $true
 [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument] $excelDoc = $null
@@ -290,29 +281,15 @@ Try
     $excelDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Create($filePath, [DocumentFormat.OpenXml.SpreadsheetDocumentType]::Workbook)
     $excelDoc = [DocumentFormat.OpenXml.Packaging.SpreadsheetDocument]::Open($filePath1, $isEditable)
     
+    [DocumentFormat.OpenXml.Packaging.WorksheetPart] $wkShtPart = $null
+    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $wkSht = $null
+    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $shtDt = $null
 
-    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $shtDt = Get-ExcelSheetData -ExcelDocRef ([ref]$excelDoc) -SheetName "Sheet3"
+    $wkShtPart = Get-ExcelWorkSheetPart -ExcelDocRef ([ref]$excelDoc) -SheetName "Sheet3"
+    $wkSht = $wkShtPart.Worksheet
+    $shtDt = $wkSht.Where({ $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.SheetData] })[0]
 
-    [DocumentFormat.OpenXml.Spreadsheet.Sheet[]] $qSheets = $null
-    [DocumentFormat.OpenXml.Spreadsheet.Sheet] $sheet = $null
-    [DocumentFormat.OpenXml.Spreadsheet.Worksheet] $ws = $null
-    [DocumentFormat.OpenXml.Spreadsheet.SheetData] $sheetData = $null
 
-    $qSheets = $excelDoc.WorkbookPart.Workbook.Sheets.Where({ $_.Name.HasValue -and $_.Name.Value -eq "Sheet3" })
-    
-    if ($qSheets.Count -ge 1)
-    {
-        $sheet = $qSheets[0]
-        
-        $ws = ([DocumentFormat.OpenXml.Packaging.WorksheetPart]$excelDoc.WorkbookPart.GetPartById($sheet.Id)).Worksheet
-        
-        $qSheetDatas = $ws.Where({ $_.GetType() -eq [DocumentFormat.OpenXml.Spreadsheet.SheetData] })
-        
-        if ($qSheetDatas.Count -ge 1)
-        {
-            $sheetData = $qSheetDatas[0]
-        }
-    }
 }
 Catch
 {
