@@ -1,7 +1,7 @@
 ﻿
 [char[]] $Script:Alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()
 
-Function ToName()
+Function Convert-ExcelColumnNumberToName()
 {
     [CmdletBinding()]
     Param
@@ -34,7 +34,7 @@ Function ToName()
 }
 
 
-Function ToNumber()
+Function Convert-ExcelColumnNameToNumber()
 {
     [CmdletBinding()]
     Param
