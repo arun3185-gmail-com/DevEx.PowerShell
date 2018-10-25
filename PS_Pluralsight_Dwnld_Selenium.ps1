@@ -5,11 +5,12 @@
 
 Add-Type -AssemblyName System.Web
 
-Import-Module "F:\Arun\DevEx\NuPkg\htmlagilitypack.1.8.5\lib\Net40\HtmlAgilityPack.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\epplus.4.5.2.1\lib\net40\EPPlus.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\htmlagilitypack.1.8.5\lib\Net40\HtmlAgilityPack.dll"
 
-Import-Module "F:\Arun\DevEx\NuPkg\selenium.webdriver.3.14.0\lib\net40\WebDriver.dll"
-Import-Module "F:\Arun\DevEx\NuPkg\selenium.webdriverbackedselenium.3.14.0\lib\net40\Selenium.WebDriverBackedSelenium.dll"
-Import-Module "F:\Arun\DevEx\NuPkg\selenium.support.3.14.0\lib\net40\WebDriver.Support.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\selenium.webdriver.3.14.0\lib\net40\WebDriver.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\selenium.webdriverbackedselenium.3.14.0\lib\net40\Selenium.WebDriverBackedSelenium.dll"
+Import-Module "D:\Arun\Git\DevEx.References\NuGet\selenium.support.3.14.0\lib\net40\WebDriver.Support.dll"
 
 ################################################################################################################################################################
 <#
@@ -48,6 +49,7 @@ https://app.pluralsight.com/library/courses/building-sentiment-analysis-systems-
 ################################################################################################################################################################
 #[String] $Global:UserName = "Alex.Grayson@DxIT180818.onmicrosoft.com"
 #[String] $Global:Password = "Plur@1sight"
+[String] $Global:CourseMetaDataXL = "D:\Arun\Git\DevEx.Data\PluralsightCoursesMetadata.xlsx"
 [String] $Global:UserName = "john.travolta@I180618.onmicrosoft.com"
 [String] $Global:Password = "P@180618"
 
@@ -61,8 +63,8 @@ https://app.pluralsight.com/library/courses/building-sentiment-analysis-systems-
 [String] $Global:Tab        = [char]9
 [String] $Global:TimeFormat = "[yyyy-MM-dd HH:mm:ss.fff]"
 
-[string] $Global:ChromeDriverLocation = "F:\Arun\DevEx\NuPkg\chromedriver_win32"
-[String] $Global:ThisScriptRoot       = @("F:\Arun\DevEx\PS", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
+[string] $Global:ChromeDriverLocation = "D:\Arun\Git\DevEx.References\NuGet\chromedriver_win32"
+[String] $Global:ThisScriptRoot       = @("D:\Arun\Git\DevEx.PowerShell", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
 [String] $Global:ThisScriptName       = "PS_Pluralsight_Dwnld_Selenium"
 [String] $Global:ResourceListFileName = "ResourceCheckList.csv"
 
@@ -82,6 +84,60 @@ if ($PSCommandPath -ne $null -and $PSCommandPath.Length -gt 0)
 ################################################################################################################################################################
 # Functions
 ################################################################################################################################################################
+
+[char[]] $Script:Alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()
+
+Function Convert-ExcelColumnNumberToName()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [int] $Number
+    )
+
+    if ($Number -lt 1)
+    {
+        throw New-Object System.ApplicationException("number must be greater than or equal to 1")
+    }
+
+    [int] $mod = $Number % 26
+    [int] $coefOf26 = ($Number - $mod) / 26
+    [int] $coefOf676 = ($Number - (26 * $coefOf26) - $mod) / 676
+    [System.Text.StringBuilder] $colNameBuilder = New-Object System.Text.StringBuilder(3)
+
+    if ($coefOf676 -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
+    elseif ($coefOf676 -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
+    
+    if ($coefOf26 -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
+    elseif ($coefOf26 -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
+
+    if ($mod -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
+    elseif ($mod -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
+
+
+    Return $colNameBuilder.ToString()
+}
+
+Function Convert-ExcelColumnNameToNumber()
+{
+    [CmdletBinding()]
+    Param
+    (
+        [Parameter(Mandatory = $true)]
+        [string] $Name
+    )
+
+    [int] $colNameLength = $Name.Length
+    [int] $number = 0
+
+    if ($colNameLength -ge 1) { $number +=       ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 1]) + 1) }
+    if ($colNameLength -ge 2) { $number +=  26 * ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 2]) + 1) }
+    if ($colNameLength -ge 3) { $number += 676 * ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 3]) + 1) }
+
+
+    Return $number
+}
 
 Function Write-LogInfo()
 {
@@ -138,6 +194,10 @@ Function Get-ResourceList()
 
 [System.Net.WebClient] $wbClient = $null
 [HtmlAgilityPack.HtmlDocument] $htmlDoc = $null
+
+[OfficeOpenXml.ExcelPackage] $excelPkg = $null
+[OfficeOpenXml.ExcelWorksheet] $excelSheet = $null
+
 [OpenQA.Selenium.Chrome.ChromeDriver] $webDriver = $null
 [OpenQA.Selenium.Chrome.ChromeOptions] $chrmOpts = $null
 [System.IO.FileSystemWatcher] $downloadsCatcher = $null
@@ -194,20 +254,29 @@ Try
     Write-Host    "Downloading Courses..."
     ################################################################################
     
-    $CourseUrls = $CoursesList.Split([System.Environment]::NewLine, [System.StringSplitOptions]::RemoveEmptyEntries)
+    $excelPkg = New-Object OfficeOpenXml.ExcelPackage((New-Object System.IO.FileInfo($Global:CourseMetaDataXL)))
+    $excelSheet = $excelPkg.Workbook.Worksheets[1]
 
+    [string[]] $ArrayOfColumnHeaders = @("Category","Status","CourseName","Rating","Level","Updated","Duration","CourseUrl")
+    [int] $excelColumnCount = $excelSheet.Dimension.Columns
+    [int] $excelRowCount = $excelSheet.Dimension.Rows
 
-    foreach ($courseUrl in $CourseUrls)
-    {        
+    for ($i = 2; $i -le $excelRowCount; $i++)
+    {
+        if ($excelSheet.Cells[$i, 2].Text -eq "Completed") { continue; }
+
         ################################################################################
         # Opening Course Url and Extracting Title, Info, Description
-        # $courseUrl = $CourseUrls[0]
+        #    $courseUrl = $excelSheet.Cells[$i, 8].Text
         ################################################################################
+
+        $courseUrl = $excelSheet.Cells[$i, 8].Text
 
         Write-LogInfo "   Opening - $($courseUrl)"
         Write-Host    "   Opening... $($courseUrl)"
 
         $webDriver.Navigate().GoToUrl($courseUrl)
+        $mainPageResponseString = $wbClient.DownloadString($courseUrl)
 
         Write-LogInfo "      Read - Title, Info, Description"
         Write-Host    "      Read - Title, Info, Description"
@@ -215,14 +284,17 @@ Try
         $htmlWebElmnt = $webDriver.FindElementByTagName("html");
         $htmlContents = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return arguments[0].outerHTML;", $htmlWebElmnt))
 
-        $htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
-        $htmlDoc.LoadHtml($htmlContents)
+        #$htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
+        #$htmlDoc.LoadHtml($htmlContents)
         
+        $htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
+        $htmlDoc.LoadHtml($mainPageResponseString)
+
         $courseDirectoryInfo = $null
         $courseUrlName       = $courseUrl.Substring($courseUrl.LastIndexOf('/') + 1)
         $courseTitle         = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//h1").InnerText.Trim())
-        #$courseInfo          = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//div[@id='course-page-description']").SelectNodes("//div[@class='text-component']")[0].InnerText)
-        #$courseDescription   = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectNodes("//div[@class='course-info-tile-right']")[0].SelectNodes("p").InnerText)
+        $courseInfo          = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//div[@id='course-page-description']").SelectNodes("//div[@class='text-component']")[0].InnerText)
+        $courseDescription   = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectNodes("//div[@class='course-info-tile-right']")[0].SelectNodes("p").InnerText)
         $validCourseTitle    = [string]::Join("", $courseTitle.Split([System.IO.Path]::GetInvalidFileNameChars()))
         $courseInfoRespJson  = $null
         $ArrResourceUrls     = $null
@@ -246,15 +318,53 @@ Try
         ################################################################################
         # Saving Course Information
         ################################################################################
-        <#
-        if ($ArrResourceUrls[0].StatusCode -lt 2) { }
+
+        if ($ArrResourceUrls[0].StatusCode -lt 2)
+        {
+            Write-LogInfo "      Saving Course Information"
+            Write-Host    "      Saving Course Information"
+            
+            $Local:sbCourseInfo = New-Object System.Text.StringBuilder
+
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("Course Title:")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("--------------")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine($courseTitle)
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine()
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("Course Info:")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("-------------")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine($courseInfo)
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine()
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("Course Description:")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine("--------------------")
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine($courseDescription)
+            $Local:sbCourseInfo = $Local:sbCourseInfo.AppendLine()
+            
+            $Local:sbCourseInfo.ToString() | Out-File -FilePath "$($courseDirectoryInfo.FullName)\$($ArrResourceUrls[0].RelativeFilePath)" -Encoding utf8
+
+            $ArrResourceUrls[0].StatusCode = 2
+        }
 
         ################################################################################
         # Downloading and Saving Course Metadata Json
         ################################################################################
         
-        if ($ArrResourceUrls[1].StatusCode -lt 2) { } else { }        
-        #>
+        if ($ArrResourceUrls[1].StatusCode -lt 2)
+        {
+            Write-LogInfo "      Downloading and Saving Course Metadata Json"
+            Write-Host    "      Downloading and Saving Course Metadata Json"
+            
+            $courseInfoRespJson = $wbClient.DownloadString($ArrResourceUrls[1].ResourceUrl)
+            $courseInfoRespJson | Out-File -FilePath "$($courseDirectoryInfo.FullName)\$($ArrResourceUrls[1].RelativeFilePath)"
+
+            $ArrResourceUrls[1].StatusCode = 2
+        }
+        else
+        {
+            Write-LogInfo "      Reading Course Metadata Json"
+            Write-Host    "      Reading Course Metadata Json"
+
+            $courseInfoRespJson = Get-Content -Path "$($courseDirectoryInfo.FullName)\$($ArrResourceUrls[1].RelativeFilePath)"
+        }
 
         ################################################################################
         # Downloading and Saving Transcript Json
@@ -430,12 +540,36 @@ Try
                 }
 
                 ################################################################################
+                $ArrResourceUrls | Export-Csv -Path "$($courseDirectoryInfo.FullName)\$($Global:ResourceListFileName)"
 
             }
 
-            $ArrResourceUrls = $null
         }
         
+
+        ################################################################################
+        # Update Metadata file
+        ################################################################################
+
+        if ($ArrResourceUrls -ne $null)
+        {
+            if ($ArrResourceUrls.Count -gt 4 -and $ArrResourceUrls.Where({ $_.StatusCode -ne 2 }).Count -gt 0)
+            {
+                $excelSheet.Cells[$i, 2].Value = "Completed"
+            }
+            else
+            {
+                $excelSheet.Cells[$i, 2].Value = "InComplete"
+            }
+        }
+        else
+        {
+            $excelSheet.Cells[$i, 2].Value = "NotStarted"
+        }
+        
+        $excelPkg.Save()
+
+        ################################################################################
     }
     
     
@@ -456,6 +590,9 @@ Catch
 }
 Finally
 {
+    if ($excelSheet        -ne $null) { $excelSheet.Dispose(); $excelSheet = $null }
+    if ($excelPkg          -ne $null) { $excelPkg.Dispose(); $excelPkg = $null }
+
     if ($wbClient          -ne $null) { $wbClient.Dispose(); $wbClient = $null }
     if ($webDriver         -ne $null) { $webDriver.Close(); $webDriver.Quit(); $webDriver.Dispose(); $webDriver = $null }
     
