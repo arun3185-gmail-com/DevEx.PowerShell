@@ -15,12 +15,6 @@ Import-Module "D:\Arun\Git\DevEx.References\NuGet\selenium.support.3.14.0\lib\ne
 ################################################################################################################################################################
 <#
 
-
-#>
-
-
-[String] $CoursesList = @"
-
 https://app.pluralsight.com/library/courses/microsoft-azure-developers-what-to-use
 https://app.pluralsight.com/library/courses/developing-dotnet-microsoft-azure-getting-started
 https://app.pluralsight.com/library/courses/azure-logic-apps-fundamentals
@@ -39,17 +33,14 @@ https://app.pluralsight.com/library/courses/advanced-machine-learning-encog-pt2
 https://app.pluralsight.com/library/courses/introduction-to-machine-learning-encog
 https://app.pluralsight.com/library/courses/building-sentiment-analysis-systems-python
 
-"@
-
-<#
-
-
+https://app.pluralsight.com/library/courses/introduction-microsoft-office-open-xml
 
 #>
+
 ################################################################################################################################################################
 #[String] $Global:UserName = "Alex.Grayson@DxIT180818.onmicrosoft.com"
 #[String] $Global:Password = "Plur@1sight"
-[String] $Global:CourseMetaDataXL = "D:\Arun\Git\DevEx.Data\PluralsightCoursesMetadata.xlsx"
+[String] $Global:CourseMetaDataXL = "D:\Arun\Git\DevEx.Data\PluralsightCoursesMetadata - Copy.xlsx"
 [String] $Global:UserName = "john.travolta@I180618.onmicrosoft.com"
 [String] $Global:Password = "P@180618"
 
@@ -84,60 +75,6 @@ if ($PSCommandPath -ne $null -and $PSCommandPath.Length -gt 0)
 ################################################################################################################################################################
 # Functions
 ################################################################################################################################################################
-
-[char[]] $Script:Alphas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray()
-
-Function Convert-ExcelColumnNumberToName()
-{
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory = $true)]
-        [int] $Number
-    )
-
-    if ($Number -lt 1)
-    {
-        throw New-Object System.ApplicationException("number must be greater than or equal to 1")
-    }
-
-    [int] $mod = $Number % 26
-    [int] $coefOf26 = ($Number - $mod) / 26
-    [int] $coefOf676 = ($Number - (26 * $coefOf26) - $mod) / 676
-    [System.Text.StringBuilder] $colNameBuilder = New-Object System.Text.StringBuilder(3)
-
-    if ($coefOf676 -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
-    elseif ($coefOf676 -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
-    
-    if ($coefOf26 -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
-    elseif ($coefOf26 -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
-
-    if ($mod -eq 0) { $colNameBuilder.Append($Script:Alphas[25]) }
-    elseif ($mod -gt 0) { $colNameBuilder.Append($Script:Alphas[$mod - 1]) }
-
-
-    Return $colNameBuilder.ToString()
-}
-
-Function Convert-ExcelColumnNameToNumber()
-{
-    [CmdletBinding()]
-    Param
-    (
-        [Parameter(Mandatory = $true)]
-        [string] $Name
-    )
-
-    [int] $colNameLength = $Name.Length
-    [int] $number = 0
-
-    if ($colNameLength -ge 1) { $number +=       ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 1]) + 1) }
-    if ($colNameLength -ge 2) { $number +=  26 * ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 2]) + 1) }
-    if ($colNameLength -ge 3) { $number += 676 * ([array]::IndexOf($Script:Alphas, $Name[$colNameLength - 3]) + 1) }
-
-
-    Return $number
-}
 
 Function Write-LogInfo()
 {
@@ -275,8 +212,8 @@ Try
         Write-LogInfo "   Opening - $($courseUrl)"
         Write-Host    "   Opening... $($courseUrl)"
 
-        $webDriver.Navigate().GoToUrl($courseUrl)
-        $mainPageResponseString = $wbClient.DownloadString($courseUrl)
+        $webDriver.Navigate().GoToUrl("$($courseUrl)/description")
+        #$mainPageResponseString = $wbClient.DownloadString($courseUrl)
 
         Write-LogInfo "      Read - Title, Info, Description"
         Write-Host    "      Read - Title, Info, Description"
@@ -284,17 +221,17 @@ Try
         $htmlWebElmnt = $webDriver.FindElementByTagName("html");
         $htmlContents = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return arguments[0].outerHTML;", $htmlWebElmnt))
 
-        #$htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
-        #$htmlDoc.LoadHtml($htmlContents)
-        
         $htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
-        $htmlDoc.LoadHtml($mainPageResponseString)
+        $htmlDoc.LoadHtml($htmlContents)
+        
+        #$htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
+        #$htmlDoc.LoadHtml($mainPageResponseString)
 
         $courseDirectoryInfo = $null
         $courseUrlName       = $courseUrl.Substring($courseUrl.LastIndexOf('/') + 1)
         $courseTitle         = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//h1").InnerText.Trim())
-        $courseInfo          = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//div[@id='course-page-description']").SelectNodes("//div[@class='text-component']")[0].InnerText)
-        $courseDescription   = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectNodes("//div[@class='course-info-tile-right']")[0].SelectNodes("p").InnerText)
+        $courseInfo          = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectSingleNode("//div[@id='ps-main']").SelectNodes("//p[@class='course-hero__excerpt']")[0].InnerText)
+        $courseDescription   = [System.Web.HttpUtility]::HtmlDecode($htmlDoc.DocumentNode.SelectNodes("//div[@class='l-course-page__content']")[0].SelectNodes("p").InnerText)
         $validCourseTitle    = [string]::Join("", $courseTitle.Split([System.IO.Path]::GetInvalidFileNameChars()))
         $courseInfoRespJson  = $null
         $ArrResourceUrls     = $null
@@ -353,7 +290,11 @@ Try
             Write-LogInfo "      Downloading and Saving Course Metadata Json"
             Write-Host    "      Downloading and Saving Course Metadata Json"
             
-            $courseInfoRespJson = $wbClient.DownloadString($ArrResourceUrls[1].ResourceUrl)
+            $webDriver.Navigate().GoToUrl($ArrResourceUrls[1].ResourceUrl)
+            $htmlWebElmnt = $webDriver.FindElementByTagName("html");
+            $courseInfoRespJson = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return arguments[0].outerText;", $htmlWebElmnt))
+
+            #$courseInfoRespJson = $wbClient.DownloadString($ArrResourceUrls[1].ResourceUrl)
             $courseInfoRespJson | Out-File -FilePath "$($courseDirectoryInfo.FullName)\$($ArrResourceUrls[1].RelativeFilePath)"
 
             $ArrResourceUrls[1].StatusCode = 2
@@ -393,27 +334,63 @@ Try
             Write-Host    "      Downloading and Saving Exercise file"        
         
             $webDriver.Navigate().GoToUrl("$($courseUrl)/exercise-files")
-            $dwnldBtnWebElmnt = $webDriver.FindElementsByTagName("button")[1]
-
+            $dwnldBtnWebElmnt = $webDriver.FindElementsByTagName("button")[2]
+            
             if ($dwnldBtnWebElmnt -ne $null)
             {
                 try
                 {
+                    if (-not(Test-Path -Path $Global:FileDownloadLocation))
+                    {
+                        $dwnldsDirectory = New-Item -Path $Global:FileDownloadLocation -ItemType "Directory"
+                    }
+                    
+                    [bool] $continueWait = true
                     $downloadsCatcher = New-Object System.IO.FileSystemWatcher
                     $downloadsCatcher.Path = $Global:FileDownloadLocation
-                    $downloadsCatcher.NotifyFilter = [System.IO.NotifyFilters]::Attributes -xor
-                                                    [System.IO.NotifyFilters]::CreationTime -xor
-                                                    [System.IO.NotifyFilters]::FileName -xor
-                                                    [System.IO.NotifyFilters]::LastAccess -xor
-                                                    [System.IO.NotifyFilters]::LastWrite -xor
+                    $downloadsCatcher.NotifyFilter = [System.IO.NotifyFilters]::Attributes -bor
+                                                    [System.IO.NotifyFilters]::CreationTime -bor
+                                                    [System.IO.NotifyFilters]::FileName -bor
+                                                    [System.IO.NotifyFilters]::LastAccess -bor
+                                                    [System.IO.NotifyFilters]::LastWrite -bor
                                                     [System.IO.NotifyFilters]::Size
-                    $downloadsCatcher.EnableRaisingEvents = $true
-                    $downloadsCatcher.Changed += 
-                    $dwnldBtnWebElmnt.Click()
-                    # wait to complete download
-                    # https://stackoverflow.com/questions/36468876/test-if-a-file-has-been-downloaded-selenium-c-google-chrome
+                    $evtJob1 = Register-ObjectEvent $downloadsCatcher Created -SourceIdentifier FileCreated -Action {
+                        $continueWait = true
+                    }
 
-                    Move-Item -Path "$($Global:FileDownloadLocation)\*.*" -Destination $courseDirectoryInfo.FullName
+                    $evtJob2 = Register-ObjectEvent $downloadsCatcher Changed -SourceIdentifier FileChanged -Action {
+                        if ($Event.SourceEventArgs.FullPath.EndsWith(".crdownload", [System.StringComparison]::OrdinalIgnoreCase) -or
+                            $Event.SourceEventArgs.FullPath.EndsWith(".tmp", [System.StringComparison]::OrdinalIgnoreCase))
+                        { }
+                        else
+                        {
+                            $continueWait = $false
+                        }
+                    }
+
+                    $evtJob3 = Register-ObjectEvent $downloadsCatcher Error -SourceIdentifier FileError -Action {
+                        Write-Host $Event.SourceEventArgs.GetException().Message
+                        $continueWait = true
+                    }
+                    
+
+                    $downloadsCatcher.EnableRaisingEvents = $true
+                    $dwnldBtnWebElmnt.Click()
+                    do { } while ($continueWait)
+
+
+                    Unregister-Event FileError
+                    Unregister-Event FileChanged
+                    Unregister-Event FileRenamed
+                    Unregister-Event FileDeleted
+                    Unregister-Event FileCreated
+
+
+                    if ((Get-ChildItem -Path $Global:FileDownloadLocation -File).Length -gt 0)
+                    {
+                        Move-Item -Path "$($Global:FileDownloadLocation)\*.*" -Destination $courseDirectoryInfo.FullName
+                        $ArrResourceUrls[3].StatusCode = 2
+                    }
                 }
                 catch
                 {
@@ -484,14 +461,33 @@ Try
                     try
                     {
                         $webDriver.Navigate().GoToUrl("$($Global:HostUri)$($vidResrcItem.ResourcePageUrl)")
+                        [datetime] $strTime = Get-Date
+                        [datetime] $endTime = Get-Date
+                        [timespan] $ts = New-TimeSpan -Start $strTime -End $endTime
 
-                        # if video loaded
+                        $waitCnt = 0
+                        do
+                        {
+                            do
+                            {   
+                                $endTime = Get-Date
+                                $ts = New-TimeSpan -Start $strTime -End $endTime
+                                $htmlDocReadyState = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return document.readyState;"))
 
-                                $divMainElement = $webDriver.FindElementById("main")
-                                $sectionElement = $webDriver.FindElementById("app")
-                                $divVideoContainer = $webDriver.FindElementById("video-container")
-                                $elmtVideoUrl = $webDriver.FindElementById("vjs_video_3_html5_api")
-                        ###
+                            } While ($ts.Seconds -le 30 -or $htmlDocReadyState -ne "complete")
+
+                            $waitCnt++                            
+                            $htmlElementFound = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("var elmt = document.getElementById('vjs_video_356_html5_api'); return (typeof(elmt) != 'undefined' && elmt != null); "))
+
+                        } While ($waitCnt -le 3 -or $htmlElementFound -ne "true")
+                        
+                        
+                        $divMainElement = $webDriver.FindElementById("main")
+                        $sectionElement = $webDriver.FindElementById("app")
+                        $divVideoContainer = $webDriver.FindElementById("video-container")
+                        $elmtVideoUrl = $webDriver.FindElementById("vjs_video_356_html5_api")
+
+
                         if (-not([string]::IsNullOrWhiteSpace($elmtVideoUrl.src)))
                         {
                             $videoUri = New-Object System.Uri($elmtVideoUrl.GetAttribute("src"))
