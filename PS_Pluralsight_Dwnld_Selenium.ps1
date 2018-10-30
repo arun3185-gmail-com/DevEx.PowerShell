@@ -182,6 +182,7 @@ Try
         $Global:CookieString += "$($wbDrvCookie.ToString());"
     }
     
+    #[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Ssl3 -bor [System.Net.SecurityProtocolType]::Tls -bor [System.Net.SecurityProtocolType]::Tls11 -bor [System.Net.SecurityProtocolType]::Tls12
     $wbClient = New-Object System.Net.WebClient
     $wbClient.Headers.Add([System.Net.HttpRequestHeader]::Cookie, $Global:CookieString)
     
@@ -212,20 +213,25 @@ Try
         Write-LogInfo "   Opening - $($courseUrl)"
         Write-Host    "   Opening... $($courseUrl)"
 
-        $webDriver.Navigate().GoToUrl("$($courseUrl)/description")
-        #$mainPageResponseString = $wbClient.DownloadString($courseUrl)
+        $webDriver.Navigate().GoToUrl("$($courseUrl)/description")        
 
         Write-LogInfo "      Read - Title, Info, Description"
         Write-Host    "      Read - Title, Info, Description"
         
+        <#
         $htmlWebElmnt = $webDriver.FindElementByTagName("html");
-        $htmlContents = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return arguments[0].outerHTML;", $htmlWebElmnt))
+        $htmlContents = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return arguments[0].innerHTML;", $htmlWebElmnt))
+        #$htmlContents = $webDriver.PageSource
+        #>
 
         $htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
-        $htmlDoc.LoadHtml($htmlContents)
+        $htmlDoc.LoadHtml($webDriver.PageSource)
         
-        #$htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
-        #$htmlDoc.LoadHtml($mainPageResponseString)
+        <#
+        $mainPageResponseString = $wbClient.DownloadString($courseUrl)
+        $htmlDoc = New-Object HtmlAgilityPack.HtmlDocument
+        $htmlDoc.LoadHtml($mainPageResponseString)
+        #>
 
         $courseDirectoryInfo = $null
         $courseUrlName       = $courseUrl.Substring($courseUrl.LastIndexOf('/') + 1)
@@ -345,7 +351,7 @@ Try
                         $dwnldsDirectory = New-Item -Path $Global:FileDownloadLocation -ItemType "Directory"
                     }
                     
-                    [bool] $continueWait = true
+                    [bool] $continueWait = $true
                     $downloadsCatcher = New-Object System.IO.FileSystemWatcher
                     $downloadsCatcher.Path = $Global:FileDownloadLocation
                     $downloadsCatcher.NotifyFilter = [System.IO.NotifyFilters]::Attributes -bor
@@ -354,9 +360,8 @@ Try
                                                     [System.IO.NotifyFilters]::LastAccess -bor
                                                     [System.IO.NotifyFilters]::LastWrite -bor
                                                     [System.IO.NotifyFilters]::Size
-                    $evtJob1 = Register-ObjectEvent $downloadsCatcher Created -SourceIdentifier FileCreated -Action {
-                        $continueWait = true
-                    }
+                    
+                    $evtJob1 = Register-ObjectEvent $downloadsCatcher Created -SourceIdentifier FileCreated -Action { $continueWait = $true }
 
                     $evtJob2 = Register-ObjectEvent $downloadsCatcher Changed -SourceIdentifier FileChanged -Action {
                         if ($Event.SourceEventArgs.FullPath.EndsWith(".crdownload", [System.StringComparison]::OrdinalIgnoreCase) -or
@@ -370,14 +375,14 @@ Try
 
                     $evtJob3 = Register-ObjectEvent $downloadsCatcher Error -SourceIdentifier FileError -Action {
                         Write-Host $Event.SourceEventArgs.GetException().Message
-                        $continueWait = true
+                        $continueWait = $true
                     }
                     
-
-                    $downloadsCatcher.EnableRaisingEvents = $true
+                    
                     $dwnldBtnWebElmnt.Click()
+                    $downloadsCatcher.EnableRaisingEvents = $true
                     do { } while ($continueWait)
-
+                    
 
                     Unregister-Event FileError
                     Unregister-Event FileChanged
@@ -461,6 +466,9 @@ Try
                     try
                     {
                         $webDriver.Navigate().GoToUrl("$($Global:HostUri)$($vidResrcItem.ResourcePageUrl)")
+                        $tstPageSource = $webDriver.PageSource
+                        
+                        <#
                         [datetime] $strTime = Get-Date
                         [datetime] $endTime = Get-Date
                         [timespan] $ts = New-TimeSpan -Start $strTime -End $endTime
@@ -480,13 +488,22 @@ Try
                             $htmlElementFound = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("var elmt = document.getElementById('vjs_video_356_html5_api'); return (typeof(elmt) != 'undefined' && elmt != null); "))
 
                         } While ($waitCnt -le 3 -or $htmlElementFound -ne "true")
-                        
-                        
+                        #>
+
+                        do
+                        {
+                            $htmlElementFound = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return document.getElementsByTagName('video').length;"))
+                        } While ($htmlElementFound -ne "1")
+
+                        <#
                         $divMainElement = $webDriver.FindElementById("main")
                         $sectionElement = $webDriver.FindElementById("app")
                         $divVideoContainer = $webDriver.FindElementById("video-container")
                         $elmtVideoUrl = $webDriver.FindElementById("vjs_video_356_html5_api")
+                        #>
 
+                        $videoElements = $webDriver.FindElementsByTagName("video")
+                        $elmtVideoUrl = $videoElements[0]
 
                         if (-not([string]::IsNullOrWhiteSpace($elmtVideoUrl.src)))
                         {
