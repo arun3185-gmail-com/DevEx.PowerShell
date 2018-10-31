@@ -6,14 +6,8 @@ Add-Type -Path "J:\Arun\Git\DevEx.VB.Net\LN.vb"
 
 ################################################################################################################################################################
 
-#[string] $XmlFilePath = "J:\Arun\DevEx\Logs\VB.Net_Ex2.xml"
-
-[string] $BackupPath = "J:\Arun\DevEx\Data"
-[string] $XlFileNamePrefix = "Birmingham_ESH_Observations"
-[string] $SheetName = "Birmingham_ESH_Observations"
-
-[string] $ServerName = "AmericasApp02/Server/Evonik"
-[string] $LNFilePath = "HN/CIAOBhamESHOb.nsf"
+[string] $ServerName = "EMEAARFN01/Server/Evonik"
+[string] $LNFilePath = "Abteilungen/PKM-R/archiv-pkmrabre.nsf"
 
 $ArrayOfDefaultFields = 
 @(
@@ -40,58 +34,20 @@ try
     [LN.NotesSession]  $nSession  = New-Object LN.NotesSession
     [LN.NotesDatabase] $nDatabase = $nSession.GetDatabase($ServerName, $LNFilePath)
     [LN.NotesDocumentCollection] $docCollection = $nDatabase.AllDocuments
-    
-    [int] $rowCounter = 1
-    [int] $colCounter = 1
 
     ################################################################################
 
     Write-Host "NotesURL : $($nDatabase.NotesURL)"
     Write-Host "Document collection Count - $($docCollection.Count)"
-    
-    ################################################################################
+    Write-Host "Forms:"
 
-    $excelPkg = New-Object OfficeOpenXml.ExcelPackage
-    $excelSheet = $excelPkg.Workbook.Worksheets.Add($SheetName)    
-    
-    foreach($defaultField in $ArrayOfDefaultFields)
+    [LN.NotesFormCollection] $nForms = $nDatabase.Forms
+
+    $nForms.Length
+    for ($i = 0; $i -lt $nForms.Length; $i++)
     {
-        $excelSheet.SetValue($rowCounter, ($colCounter++), $defaultField[0])
+        "    $($nForms[$i].Name)"
     }
-    foreach($curntDBField in $ArrayOfCurntDBFields)
-    {
-        $excelSheet.SetValue($rowCounter, ($colCounter++), $curntDBField)
-    }
-    $rowCounter++
-
-    ################################################################################
-    
-    [LN.NotesDocument] $doc = $docCollection.GetFirstDocument()
-
-    while ($doc -ne $null)
-    {
-        $colCounter = 1
-        foreach($defaultField in $ArrayOfDefaultFields)
-        {
-            $excelSheet.SetValue($rowCounter, ($colCounter++), (& $defaultField[1] $doc))
-        }
-        foreach($curntDBField in $ArrayOfCurntDBFields)
-        {
-            $excelSheet.SetValue($rowCounter, ($colCounter++), $doc.GetFirstItem($curntDBField).Text)
-        }
-        
-        Write-Host $doc.NoteID
-        $rowCounter++
-        $doc = $docCollection.GetNextDocument($doc)
-    }    
-    
-    ################################################################################
-
-    [string] $dtTimeSuffix = (Get-Date -Format "yyyyMMdd_HHmmss")
-    [string] $xlFilePath = "$($BackupPath)\$($XlFileNamePrefix)_$($dtTimeSuffix).xlsx"
-
-    if (!(Test-Path -Path $BackupPath)) { New-Item -Path $BackupPath -ItemType "directory" }
-    $excelPkg.SaveAs((New-Object System.IO.FileInfo($xlFilePath)))
 
     ################################################################################
 }
@@ -101,9 +57,6 @@ catch
 }
 finally
 {
-    if ($excelSheet -ne $null) { $excelSheet.Dispose(); $excelSheet = $null }
-    if ($excelPkg -ne $null) { $excelPkg.Dispose(); $excelPkg = $null }
-    
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
