@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # Pluralsight Downloader Selenium
 ################################################################################################################################################################
@@ -138,6 +138,8 @@ Function Get-ResourceList()
 [OpenQA.Selenium.Chrome.ChromeDriver] $webDriver = $null
 [OpenQA.Selenium.Chrome.ChromeOptions] $chrmOpts = $null
 [System.IO.FileSystemWatcher] $downloadsCatcher = $null
+
+[string[]] $chromeTabs = $null
 
 Try
 {
@@ -340,8 +342,22 @@ Try
             Write-Host    "      Downloading and Saving Exercise file"        
         
             $webDriver.Navigate().GoToUrl("$($courseUrl)/exercise-files")
-            $dwnldBtnWebElmnt = $webDriver.FindElementsByTagName("button")[2]
             
+            ([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("window.open();")
+            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[1])
+            $webDriver.Navigate().GoToUrl("chrome://downloads/")
+            
+            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[0])
+            $dwnldBtnWebElmnt = $webDriver.FindElementsByTagName("button").Where({ $PSItem.Text.Contains("Download") -and $PSItem.Text.Contains("exercise") })[0]
+            $dwnldBtnWebElmnt.Click()
+            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[1])
+            
+            [OpenQA.Selenium.IWebElement] $dwnldsTab_Body = $webDriver.FindElementByTagName("body")
+            $dwnldsTab_Body.GetAttribute("Text")
+
+            ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return this.document.body.innerText;"))
+            
+
             if ($dwnldBtnWebElmnt -ne $null)
             {
                 try
