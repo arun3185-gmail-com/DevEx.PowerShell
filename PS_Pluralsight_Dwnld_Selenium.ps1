@@ -83,6 +83,40 @@ Function Write-LogInfo()
     "$(Get-Date -Format $Global:TimeFormat):$($Global:Tab)$($Message)" | Out-File -FilePath $Global:LogFilePath -Append
 }
 
+Function Create-ResourceItem()
+{
+    Param
+    (        
+        [Parameter(Mandatory = $false)]
+        [string] $ResourceTitle = "",
+
+        [Parameter(Mandatory = $false)]
+        [string] $ResourceSubTitle = "",
+
+        [Parameter(Mandatory = $false)]
+        [string] $ResourcePageUrl = "",
+
+        [Parameter(Mandatory = $false)]
+        [string] $RelativeFilePath = "",
+
+        [Parameter(Mandatory = $false)]
+        [string] $ResourceUrl = "",
+
+        [Parameter(Mandatory = $false)]
+        [int] $StatusCode = 0
+    )
+
+    $Local:ResObj = New-Object PSObject
+    $Local:ResObj | Add-Member NoteProperty -Name "ResourceTitle"    -Value $ResourceTitle
+    $Local:ResObj | Add-Member NoteProperty -Name "ResourceSubTitle" -Value $ResourceSubTitle
+    $Local:ResObj | Add-Member NoteProperty -Name "ResourcePageUrl"  -Value $ResourcePageUrl
+    $Local:ResObj | Add-Member NoteProperty -Name "RelativeFilePath" -Value $RelativeFilePath
+    $Local:ResObj | Add-Member NoteProperty -Name "ResourceUrl"      -Value $ResourceUrl
+    $Local:ResObj | Add-Member NoteProperty -Name "StatusCode"       -Value $StatusCode
+    
+    Return $Local:ResObj
+}
+
 Function Get-ResourceList()
 {
     Param ([string] $CourseUrl)
@@ -215,7 +249,7 @@ Try
         Write-LogInfo "   Opening - $($courseUrl)"
         Write-Host    "   Opening... $($courseUrl)"
 
-        $webDriver.Navigate().GoToUrl("$($courseUrl)/description")        
+        $webDriver.Navigate().GoToUrl("$($courseUrl)/description")
 
         Write-LogInfo "      Read - Title, Info, Description"
         Write-Host    "      Read - Title, Info, Description"
@@ -343,87 +377,48 @@ Try
         
             $webDriver.Navigate().GoToUrl("$($courseUrl)/exercise-files")
             
-            ([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("window.open();")
-            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[1])
-            $webDriver.Navigate().GoToUrl("chrome://downloads/")
-            
-            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[0])
+            Get-ChildItem -Path $Global:FileDownloadLocation | Remove-Item
+
+            [System.IO.DirectoryInfo] $dirInfo = New-Object System.IO.DirectoryInfo($Global:FileDownloadLocation)
+            [int] $initFilesCount = $dirInfo.GetFiles().Count
+            [int] $counter = 0
+
             $dwnldBtnWebElmnt = $webDriver.FindElementsByTagName("button").Where({ $PSItem.Text.Contains("Download") -and $PSItem.Text.Contains("exercise") })[0]
             $dwnldBtnWebElmnt.Click()
-            $webDriver = $webDriver.SwitchTo().Window($webDriver.WindowHandles[1])
             
-            [OpenQA.Selenium.IWebElement] $dwnldsTab_Body = $webDriver.FindElementByTagName("body")
-            $dwnldsTab_Body.GetAttribute("Text")
+            do { $counter++; Start-Sleep -Milliseconds 5000; }
+            While ($dirInfo.GetFiles().Count -eq $initFilesCount -and $counter -le 3)
 
-            ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return this.document.body.innerText;"))
-            
 
-            if ($dwnldBtnWebElmnt -ne $null)
+            if ($dirInfo.GetFiles().Count -gt 0 -and $dirInfo.GetFiles().Where({ $PSItem.Extension -in @(".tmp",".crdownload") }).Count -eq 1)
             {
-                try
+                $counter = 0
+
+                do { $counter++; Start-Sleep -Milliseconds 5000; }
+                While ($dirInfo.GetFiles().Where({ $PSItem.Extension -in @(".tmp",".crdownload") }).Count -eq 1 -and $counter -le 10)
+
+                if ($dirInfo.GetFiles().Where({ $PSItem.Extension -in @(".tmp",".crdownload") }).Count -eq 0 -and $dirInfo.GetFiles().Count -eq 1)
                 {
-                    if (-not(Test-Path -Path $Global:FileDownloadLocation))
-                    {
-                        $dwnldsDirectory = New-Item -Path $Global:FileDownloadLocation -ItemType "Directory"
-                    }
-                    
-                    [bool] $continueWait = $true
-                    $downloadsCatcher = New-Object System.IO.FileSystemWatcher
-                    $downloadsCatcher.Path = $Global:FileDownloadLocation
-                    $downloadsCatcher.NotifyFilter = [System.IO.NotifyFilters]::Attributes -bor
-                                                    [System.IO.NotifyFilters]::CreationTime -bor
-                                                    [System.IO.NotifyFilters]::FileName -bor
-                                                    [System.IO.NotifyFilters]::LastAccess -bor
-                                                    [System.IO.NotifyFilters]::LastWrite -bor
-                                                    [System.IO.NotifyFilters]::Size
-                    
-                    $evtJob1 = Register-ObjectEvent $downloadsCatcher Created -SourceIdentifier FileCreated -Action { $continueWait = $true }
+                    Move-Item -Path "$($Global:FileDownloadLocation)\*.*" -Destination $courseDirectoryInfo.FullName
+                    $ArrResourceUrls[3].StatusCode = 2
 
-                    $evtJob2 = Register-ObjectEvent $downloadsCatcher Changed -SourceIdentifier FileChanged -Action {
-                        if ($Event.SourceEventArgs.FullPath.EndsWith(".crdownload", [System.StringComparison]::OrdinalIgnoreCase) -or
-                            $Event.SourceEventArgs.FullPath.EndsWith(".tmp", [System.StringComparison]::OrdinalIgnoreCase))
-                        { }
-                        else
-                        {
-                            $continueWait = $false
-                        }
-                    }
-
-                    $evtJob3 = Register-ObjectEvent $downloadsCatcher Error -SourceIdentifier FileError -Action {
-                        Write-Host $Event.SourceEventArgs.GetException().Message
-                        $continueWait = $true
-                    }
-                    
-                    
-                    $dwnldBtnWebElmnt.Click()
-                    $downloadsCatcher.EnableRaisingEvents = $true
-                    do { } while ($continueWait)
-                    
-
-                    Unregister-Event FileError
-                    Unregister-Event FileChanged
-                    Unregister-Event FileRenamed
-                    Unregister-Event FileDeleted
-                    Unregister-Event FileCreated
-
-
-                    if ((Get-ChildItem -Path $Global:FileDownloadLocation -File).Length -gt 0)
-                    {
-                        Move-Item -Path "$($Global:FileDownloadLocation)\*.*" -Destination $courseDirectoryInfo.FullName
-                        $ArrResourceUrls[3].StatusCode = 2
-                    }
+                    Write-LogInfo "      Downloaded and saved Exercise file"
+                    Write-Host    "      Downloaded and saved Exercise file"
                 }
-                catch
+                else
                 {
-                    Write-Host $_.Exception.Message
-                }
-                finally
-                {
-                    if ($downloadsCatcher -ne $null) { $downloadsCatcher.Dispose() }
+                    Write-LogInfo "      Exercise file download timeout! Skipping"
+                    Write-Host    "      Exercise file download timeout! Skipping..."
                 }
             }
-
+            else
+            {
+                Write-LogInfo "      Looks like nothing is downloading"
+                Write-Host    "      Looks like nothing is downloading..."
+            }
         }
+
+        $ArrResourceUrls | Export-Csv -Path "$($courseDirectoryInfo.FullName)\$($Global:ResourceListFileName)"
 
         ################################################################################
         # Appending Videos to Resource List
@@ -476,53 +471,20 @@ Try
                     Write-LogInfo "      Getting     Video url - $($vidResrcItem.ResourceTitle)\$($vidResrcItem.ResourceSubTitle)"
                     Write-Host    "      Getting     Video url... $($vidResrcItem.ResourceTitle)\$($vidResrcItem.ResourceSubTitle)"
 
-                    $exitCounter  = 0
-                    $elmtVideoUrl = $null
-
                     try
                     {
                         $webDriver.Navigate().GoToUrl("$($Global:HostUri)$($vidResrcItem.ResourcePageUrl)")
-                        $tstPageSource = $webDriver.PageSource
+                        Start-Sleep -Milliseconds 2000
+
+                        [OpenQA.Selenium.Support.UI.WebDriverWait] $videoLoadWait = New-Object OpenQA.Selenium.Support.UI.WebDriverWait($webDriver, [timespan]::FromSeconds(100))
+                        $videoElements = $videoLoadWait.Until([OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists([OpenQA.Selenium.By]::TagName("video")))
                         
-                        <#
-                        [datetime] $strTime = Get-Date
-                        [datetime] $endTime = Get-Date
-                        [timespan] $ts = New-TimeSpan -Start $strTime -End $endTime
-
-                        $waitCnt = 0
-                        do
+                        #$videoElements = $webDriver.FindElementsByTagName("video")
+                        
+                        if ($videoElements.Count -gt 0 -and  (-not([string]::IsNullOrWhiteSpace($videoElements[0].GetAttribute("src")))))
                         {
-                            do
-                            {   
-                                $endTime = Get-Date
-                                $ts = New-TimeSpan -Start $strTime -End $endTime
-                                $htmlDocReadyState = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return document.readyState;"))
+                            $elmtVideoUrl = $videoElements[0]
 
-                            } While ($ts.Seconds -le 30 -or $htmlDocReadyState -ne "complete")
-
-                            $waitCnt++                            
-                            $htmlElementFound = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("var elmt = document.getElementById('vjs_video_356_html5_api'); return (typeof(elmt) != 'undefined' && elmt != null); "))
-
-                        } While ($waitCnt -le 3 -or $htmlElementFound -ne "true")
-                        #>
-
-                        do
-                        {
-                            $htmlElementFound = ([string]([OpenQA.Selenium.IJavaScriptExecutor]$webDriver).ExecuteScript("return document.getElementsByTagName('video').length;"))
-                        } While ($htmlElementFound -ne "1")
-
-                        <#
-                        $divMainElement = $webDriver.FindElementById("main")
-                        $sectionElement = $webDriver.FindElementById("app")
-                        $divVideoContainer = $webDriver.FindElementById("video-container")
-                        $elmtVideoUrl = $webDriver.FindElementById("vjs_video_356_html5_api")
-                        #>
-
-                        $videoElements = $webDriver.FindElementsByTagName("video")
-                        $elmtVideoUrl = $videoElements[0]
-
-                        if (-not([string]::IsNullOrWhiteSpace($elmtVideoUrl.src)))
-                        {
                             $videoUri = New-Object System.Uri($elmtVideoUrl.GetAttribute("src"))
                             $uriFileName = $videoUri.Segments[$videoUri.Segments.Count - 1]
                             $extName = $uriFileName.Substring($uriFileName.LastIndexOf('.'))
