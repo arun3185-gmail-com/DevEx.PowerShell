@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # Lotus Notes All Documents List
 ################################################################################################################################################################
@@ -67,17 +67,16 @@ function CreateFormInfoObject()
 
 try
 {
+    Write-Host "Initializing NotesSession..."
+
     $nSession = New-Object LN.NotesSession
     $nDatabase = $nSession.GetDatabase($ServerName, $LNFilePath)
     $docCollection = $nDatabase.AllDocuments
     $nForms = $nDatabase.Forms
 
-    Write-Host "NotesURL : $($nDatabase.NotesURL)"
-    Write-Host "Document collection Count - $($docCollection.Count)"
-
-
     ################################################################################
 
+    Write-Host "Reading Database..."
 
     $excelPkg = New-Object OfficeOpenXml.ExcelPackage
 
@@ -103,7 +102,9 @@ try
     $excelSheet_Info.SetValue(10, 1, "Documents Count")
     $excelSheet_Info.SetValue(10, 2, $docCollection.Count)
 
+    $excelSheet_Info.Cells["A1:B10"].AutoFitColumns()
 
+    
     ################################################################################
 
     Write-Host "Reading Forms..."
@@ -126,7 +127,8 @@ try
     
 
     ################################################################################
-
+    
+    Write-Host "Reading Documents..."
 
     $excelSheet_Documents = $excelPkg.Workbook.Worksheets.Add("Documents")
     $rowCounter = 1
@@ -160,6 +162,8 @@ try
     }
     
     ################################################################################
+    
+    Write-Host "Updating Forms..."
 
     for ($i = 0; $i -lt $Global:LNFormInfos.Count; $i++)
     {
@@ -168,6 +172,8 @@ try
     }
 
     ################################################################################
+
+    Write-Host "Saving Excel..."
 
     [string] $xlFilePath = "$($Global:ThisScriptRoot)\DatabaseInfo - $($nDatabase.Title).xlsx"
     $excelPkg.SaveAs((New-Object System.IO.FileInfo($xlFilePath)))
