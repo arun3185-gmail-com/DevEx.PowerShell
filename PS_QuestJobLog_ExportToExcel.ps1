@@ -9,7 +9,7 @@ Import-Module "J:\Arun\Git\DevEx.References\NuGet\epplus.4.5.2.1\lib\net40\EPPlu
 ################################################################################################################################################################
 
 [string] $QuestJobLogPath = "J:\QuestJobLogs"
-[string] $QuestJobLogFileName = "10426_KMZ_Abteilungsinfo_NMSP_10_31_2018_12_12_34"
+[string] $QuestJobLogFileName = "Team-Doku S8-BR NMSP_11_16_2018_11_42_34"
 
 [string] $Global:Tab = [char]9
 [string] $Global:LogTimeFormat  = "[yyyy-MM-dd HH:mm:ss.fff]"
@@ -32,7 +32,7 @@ if (-not($QuestJobLogFileName.EndsWith(".log")))
 {
     $QuestJobLogFileName += ".log"
 }
-[string] $QstLogFilePath = "$($QuestJobLogPath)\$($QuestJobLogFileName)"   #"J:\QuestJobLogs\10426_PKMR_Abrechnung_NMSP_10_29_2018_18_46_45.log"
+[string] $QstLogFilePath = "$($QuestJobLogPath)\$($QuestJobLogFileName)"
 [string] $XlFileName = $QuestJobLogFileName.Replace(".log", ".xlsx")
 [string] $SheetName = "Sheet1"
 

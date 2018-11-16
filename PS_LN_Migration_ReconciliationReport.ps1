@@ -16,7 +16,7 @@ Import-Module "J:\Arun\Git\DevEx.References\NuGet\microsoft.sharepointonline.cso
 [string] $Global:Tab = [char]9
 
 [string] $Global:TimeFormat  = "[yyyy-MM-dd HH:mm:ss.fff]"
-[string] $Global:ThisScriptRoot = @("J:\Arun\DevEx\PS", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
+[string] $Global:ThisScriptRoot = @("J:\Arun\Git\DevEx.PowerShell", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
 [string] $Global:ThisScriptName = $null
 
 if ($PSCommandPath -ne $null -and $PSCommandPath.Length -gt 0)

@@ -2,17 +2,17 @@
 ################################################################################################################################################################
 # SharePoint delete all items
 ################################################################################################################################################################
-Import-Module "J:\Arun\DevEx\DLLRefs\microsoft.sharepointonline.csom.16.1.7414.1200\lib\net45\Microsoft.SharePoint.Client.dll"
-Import-Module "J:\Arun\DevEx\DLLRefs\microsoft.sharepointonline.csom.16.1.7414.1200\lib\net45\Microsoft.SharePoint.Client.Runtime.dll"
+Import-Module "J:\Arun\Git\DevEx.References\NuGet\microsoft.sharepointonline.csom.16.1.7414.1200\lib\net45\Microsoft.SharePoint.Client.dll"
+Import-Module "J:\Arun\Git\DevEx.References\NuGet\microsoft.sharepointonline.csom.16.1.7414.1200\lib\net45\Microsoft.SharePoint.Client.Runtime.dll"
 ################################################################################################################################################################
 
 [string] $Username = "B13501@evonik.com"
 [SecureString] $Password = Read-Host "Enter Password for $($Username)" -AsSecureString
 [string] $SiteUrl   = "https://evonik.sharepoint.com/sites/10426"
-[string] $ListTitle = "Archiv"
+[string] $ListTitle = "Info"
 
 [string] $TimeFormat  = "[yyyy-MM-dd HH:mm:ss.fff]"
-[string] $ThisScriptRoot = @("J:\Arun\DevEx\PS", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
+[string] $ThisScriptRoot = @("J:\Arun\Git\DevEx.PowerShell", $PSScriptRoot)[($PSScriptRoot -ne $null -and $PSScriptRoot.Length -gt 0)]
 [string] $ThisScriptName = $null
 
 if ($PSCommandPath -ne $null -and $PSCommandPath.Length -gt 0)
