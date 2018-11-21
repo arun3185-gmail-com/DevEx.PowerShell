@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # NMSP Ensure SPList
 ################################################################################################################################################################
@@ -29,19 +29,19 @@ Function Init-FieldSchemaTemplates
     $fldSchm | Add-Member NoteProperty -Name "FieldType" -TypeName "Microsoft.SharePoint.Client.FieldType" -Value ([Microsoft.SharePoint.Client.FieldType]::Note)
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeDescription" -Value "Multiple lines of text"
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeOptions" -Value "Plain text"
-    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Text' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='FALSE' AppendOnly='FALSE' />"
+    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Note' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='FALSE' AppendOnly='FALSE' />"
 
     $fldSchm = New-Object PSObject
     $fldSchm | Add-Member NoteProperty -Name "FieldType" -TypeName "Microsoft.SharePoint.Client.FieldType" -Value ([Microsoft.SharePoint.Client.FieldType]::Note)
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeDescription" -Value "Multiple lines of text"
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeOptions" -Value "Rich text (Bold, italics, text alignment, hyperlinks)"
-    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Text' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='TRUE' RichTextMode='Compatible' IsolateStyles='FALSE' AppendOnly='FALSE' />"
+    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Note' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='TRUE' RichTextMode='Compatible' IsolateStyles='FALSE' AppendOnly='FALSE' />"
 
     $fldSchm = New-Object PSObject
     $fldSchm | Add-Member NoteProperty -Name "FieldType" -TypeName "Microsoft.SharePoint.Client.FieldType" -Value ([Microsoft.SharePoint.Client.FieldType]::Note)
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeDescription" -Value "Multiple lines of text"
     $fldSchm | Add-Member NoteProperty -Name "FieldTypeOptions" -Value "Enhanced rich text (Rich text with pictures, tables, and hyperlinks)"
-    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Text' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='TRUE' RichTextMode='FullHtml' IsolateStyles='TRUE' RestrictedMode='TRUE' AppendOnly='FALSE' />"
+    $fldSchm | Add-Member NoteProperty -Name "SchemaXml" -Value "<Field Type='Note' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' NumLines='6' RichText='TRUE' RichTextMode='FullHtml' IsolateStyles='TRUE' RestrictedMode='TRUE' AppendOnly='FALSE' />"
 
     $fldSchm = New-Object PSObject
     $fldSchm | Add-Member NoteProperty -Name "FieldType" -TypeName "Microsoft.SharePoint.Client.FieldType" -Value ([Microsoft.SharePoint.Client.FieldType]::Choice)
@@ -154,13 +154,58 @@ Function Init-FieldSchemaTemplates
 <#
 
 
+
 <Field Type='User' List='UserInfo' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' UserSelectionMode='PeopleOnly' UserSelectionScope='0' />
 <Field Type='User' List='UserInfo' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' UserSelectionMode='PeopleAndGroups' UserSelectionScope='0' Group='' Mult='FALSE' />
 <Field Type='UserMulti' List='UserInfo' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' UserSelectionMode='PeopleOnly' UserSelectionScope='3' Group='' Mult='TRUE' />
 
+<Field Type='URL' Format='Hyperlink' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' />
+<Field Type='URL' Format='Image' Name='' StaticName='' DisplayName='' Required='FALSE' EnforceUniqueValues='FALSE' Indexed='FALSE' />
+
+
+
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateOnly' LCID='1081' ResultType='Text' ReadOnly='TRUE'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+<FieldRefs><FieldRef Name='Title' /></FieldRefs>
+</Field>
+
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateOnly' LCID='1081' ResultType='Number' ReadOnly='TRUE' Required='FALSE' Decimals='2' Percentage='TRUE'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+</Field>
+
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateOnly' LCID='1081' ResultType='Currency' Decimals='2'  ReadOnly='TRUE'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+<FieldRefs><FieldRef Name='Title' /></FieldRefs>
+</Field>
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateOnly' LCID='1081' ResultType='DateTime' ReadOnly='TRUE' CustomFormatter='' Required='FALSE' Version='1'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+</Field>
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateTime' LCID='1081' ResultType='DateTime' ReadOnly='TRUE' CustomFormatter='' Required='FALSE' Version='2'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+</Field>
+
+<Field Type='Calculated' Name='' StaticName='' DisplayName='' EnforceUniqueValues='FALSE' Indexed='FALSE' Format='DateOnly' LCID='1081' ResultType='Boolean' ReadOnly='TRUE'>
+<Formula>=Title</Formula>
+<FormulaDisplayNames>=Title</FormulaDisplayNames>
+<FieldRefs><FieldRef Name='Title' /></FieldRefs>
+</Field>
+
+
+
 
 
 #>
+
 }
 
 ################################################################################################################################################################
