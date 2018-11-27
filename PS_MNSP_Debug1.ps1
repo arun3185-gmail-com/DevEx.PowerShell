@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # Quest - Migrator for Notes to SharePoint
 ################################################################################################################################################################
@@ -6,6 +6,54 @@ Import-Module "C:\Program Files (x86)\Quest\Migrator for Notes to SharePoint\Bin
 Import-Module "C:\Program Files (x86)\Quest\Migrator for Notes to SharePoint\Bin\Quest.NSP.Transform.Common.dll"
 Import-Module "C:\Program Files (x86)\Quest\Migrator for Notes to SharePoint\Bin\Quest.NSP.Migrator.Common.dll"
 ################################################################################################################################################################
+
+<#
+
+NotesColumnType
+	Item,
+	ViewColumn,
+	Formula,
+	Document,
+	Unid,
+	ParentItem,
+	ParentFormula,
+	ParentUnid,
+	NoteLink,
+	RichText,
+	Render,
+	Attachment,
+	AttachmentName,
+	AttachmentId,
+	AttachmentInfo,
+	AttachmentBlocked,
+	AttachmentLinks,
+	Image,
+	ImageType,
+	OleObject,
+	OleObjectClass,
+	OleObjectType
+
+NotesColumnOption
+	None,
+	Multi,
+	Flat,
+	Xml,
+	XmlNoBinary,
+	Html,
+	Cd,
+	Mime
+
+ColumnDataType
+	None,
+	String,
+	HtmlString,
+	Number,
+	Date,
+	Binary,
+	User
+
+
+#>
 
 
 
@@ -20,4 +68,7 @@ $opts.UserOptions.InitializeJobWithUserDefaults($transJob)
 
 [Quest.NSP.Transform.QuerySource] $qrySrc = $qryFactory.CreateQuerySource("DANLDA01/DA-DE/Server/Degussa","Rohmax/Supply Chain/RXGSCT.nsf")
 
-$qrySrc.MergeOptions($opts)
+[Quest.NSP.Transform.NotesGlobalQueryOptions] $nGlbQryOpts = New-Object Quest.NSP.Transform.NotesGlobalQueryOptions
+
+$qrySrc.MergeOptions($nGlbQryOpts)
+
