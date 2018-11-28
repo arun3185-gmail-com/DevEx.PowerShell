@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # Quest Job Log Analyser
 ################################################################################################################################################################
@@ -9,9 +9,9 @@ Import-Module "J:\Arun\Git\DevEx.References\NuGet\microsoft.sharepointonline.cso
 [string] $Username = "B13501@evonik.com"
 [SecureString] $Password = Read-Host "Enter Password for $($Username)" -AsSecureString
 
-[string] $SiteUrl   = "https://evonik.sharepoint.com/sites/10083"
-[string] $ListTitle = "PC_Datenbank"
-[string] $Global:QstLogFilePath = "C:\ProgramData\Dell\Migrator for Notes to SharePoint\Log Files\NMSP_08_09_2018_10_53_56.log"
+[string] $SiteUrl   = "https://evonik.sharepoint.com/sites/10543"
+[string] $ListTitle = "Doku IM-FS-AT/A&S"
+#[string] $Global:QstLogFilePath = "C:\ProgramData\Dell\Migrator for Notes to SharePoint\Log Files\NMSP_08_09_2018_10_53_56.log"
 
 [string] $Global:Tab = [char]9
 
@@ -64,7 +64,7 @@ try
     $listItems = $list.GetItems($camlQry)  
     $context.Load($web)
     $context.Load($list)
-    $context.Load($listItems)    
+    $context.Load($listItems)
 
     $context.ExecuteQuery()
     $listFoldersCount = $listItems.Count
@@ -72,21 +72,58 @@ try
     Write-Host "Items Count :-"
     Write-Host "   Total Items - $($list.ItemCount)"
     Write-Host "   Folders Count - $($listFoldersCount)"
+    Write-Host ""
+    Write-Host ""
 
     ################################################################################
     # ACL groups to SharePoint Groups
+    # AssociatedOwnerGroup, AssociatedMemberGroup, AssociatedVisitorGroup
     ################################################################################
-    
+
     $webRoleAssignments = $web.RoleAssignments
+    $context.Load($webRoleAssignments)
+    $siteGroups = $web.SiteGroups
+    $context.Load($siteGroups)
+    $siteUsers = $web.SiteUsers
+    $context.Load($siteUsers)
+    $userInfoList = $web.SiteUserInfoList
+    $context.Load($userInfoList)
+    $userInfoListItemCollection = $userInfoList.GetItems([Microsoft.SharePoint.Client.CamlQuery]::CreateAllItemsQuery())
+    $context.Load($userInfoListItemCollection)
+    $context.ExecuteQuery()
+    
+
     foreach ($roleAssgn in $webRoleAssignments)
     {
-        $roleAssgnRoleDefinitionBindings = $roleAssgn.RoleDefinitionBindings
-        
-        foreach ($roleDef in $roleAssgnRoleDefinitionBindings)
-        {
-            
-        }
+        $prncpl = $roleAssgn.Member
+
+        $context.Load($prncpl)
+        $context.ExecuteQuery()
+
+        Write-Host "$($roleAssgn.PrincipalId) - $($roleAssgn.Member.PrincipalType) - $($roleAssgn.Member.LoginName)"
     }
+
+    Write-Host ""
+    Write-Host ""
+    
+    foreach ($grp in $siteGroups)
+    {
+        Write-Host "$($grp.Id) - $($grp.PrincipalType) - $($grp.LoginName)"
+    }
+
+    Write-Host ""
+    Write-Host ""
+    
+    foreach ($grp in $siteUsers)
+    {
+        Write-Host "$($grp.Id) - $($grp.PrincipalType) - $($grp.LoginName)"
+    }
+
+    foreach ($itm in $userInfoListItemCollection)
+    {
+        Write-Host "$($itm.Id) - $($itm["Title"])"
+    }
+
 
     ################################################################################
     # Left Navigation
@@ -162,13 +199,6 @@ finally
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
 }
-
-################################################################################################################################################################
-# Cleanup
-################################################################################################################################################################
-
-[System.GC]::Collect()
-[System.GC]::WaitForPendingFinalizers()
 
 Write-Host ""
 Write-Host "END!"
