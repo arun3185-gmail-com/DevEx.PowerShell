@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 
 Import-Module "J:\Arun\Git\DevEx.References\NuGet\epplus.4.5.2.1\lib\net40\EPPlus.dll"
@@ -9,7 +9,7 @@ Add-Type -Path "J:\Arun\Git\DevEx.VB.Net\LN.vb"
 [string] $DataFolderPath = "J:\Arun\Git\DevEx.Data"
 
 [string] $ServerName = "EMEAARFN01/Server/Evonik"
-[string] $LNFilePath = "Abteilungen/PKM-R/archiv-pkmrabre.nsf"
+[string] $LNFilePath = "Abteilungen\IM-FS-AT\asfasl.nsf"
 
 $ArrayOfDefaultFields = 
 @(
@@ -20,7 +20,7 @@ $ArrayOfDefaultFields =
     @("Form"         , { param ($NotesDoc) $NotesDoc.GetFirstItem("Form").Text })
 )
 
-$ArrayOfCurntDBFields = @("beschreibung","thema","gliederung_1","datum","author","leser","info_mail","info","ablageort","ablageort2","aktualisiert_am")
+$ArrayOfCurntDBFields = @("thema","lbl_gliederung1","gliederung_1","beschreibung","docnr","titel")
 
 <#
 doccreated
@@ -85,6 +85,10 @@ try
     ################################################################################
 
     [string] $dtTimeSuffix = (Get-Date -Format "yyyyMMdd_HHmmss")
+    foreach ($c in [System.IO.Path]::GetInvalidFileNameChars())
+    {
+        $XlFileNamePrefix = $XlFileNamePrefix.Replace($c, '_')
+    }
     [string] $xlFilePath = "$($DataFolderPath)\$($XlFileNamePrefix)_$($dtTimeSuffix).xlsx"
 
     if (!(Test-Path -Path $DataFolderPath)) { New-Item -Path $DataFolderPath -ItemType "directory" }
