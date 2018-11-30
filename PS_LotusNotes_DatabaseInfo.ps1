@@ -6,8 +6,8 @@ Add-Type -Path "J:\Arun\Git\DevEx.VB.Net\LN.vb"
 Import-Module "J:\Arun\Git\DevEx.References\NuGet\epplus.4.5.2.1\lib\net40\EPPlus.dll"
 ################################################################################################################################################################
 
-[string] $ServerName = "EMEAAWES01/Server/Evonik"
-[string] $LNFilePath = "betrieb/TeamDoku_S8_BR.nsf"
+[string] $ServerName = "APACApp01/Server/Evonik"
+[string] $LNFilePath = "teamdoc/td0000103.nsf"
 
 [string] $Global:Tab = [char]9
 [string] $Global:LogTimeFormat  = "[yyyy-MM-dd HH:mm:ss.fff]"
@@ -25,6 +25,8 @@ else
 }
 [string] $Global:LogFilePath  = "$($Global:ThisScriptRoot)\$($Global:ThisScriptName).log"
 
+
+[string[]] $AdditionalFields = @("theme","division1","division2","division3","division4","DocNr","docdescription","Keywords","status")
 
 ################################################################################################################################################################
 # Functions
@@ -64,6 +66,7 @@ function CreateFormInfoObject()
 [OfficeOpenXml.ExcelWorksheet] $excelSheet_Documents = $null
 
 [int] $rowCounter = 1
+[int] $colCounter = 1
 
 try
 {
@@ -132,18 +135,26 @@ try
 
     $excelSheet_Documents = $excelPkg.Workbook.Worksheets.Add("Documents")
     $rowCounter = 1
+    $colCounter = 1
     
-    $excelSheet_Documents.SetValue($rowCounter, 1, "NoteID")
-    $excelSheet_Documents.SetValue($rowCounter, 2, "UniversalID")
-    $excelSheet_Documents.SetValue($rowCounter, 3, "Form")
-    $excelSheet_Documents.SetValue($rowCounter, 4, "NotesURL")
-    $excelSheet_Documents.SetValue($rowCounter, 5, "Created")
-    $excelSheet_Documents.SetValue($rowCounter, 6, "LastModified")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "NoteID")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "UniversalID")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "Form")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "NotesURL")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "Created")
+    $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), "LastModified")
+
+    
+    foreach ($AddnField in $AdditionalFields)
+    {
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $AddnField)
+    }
 
     [LN.NotesDocument] $doc = $docCollection.GetFirstDocument()
     while ($doc -ne $null)
     {
         $rowCounter++
+        $colCounter = 1
 
         if ($Global:LNFormInfos.Where({ $PSItem.FormName -eq $doc.GetFirstItem("Form").Text }).Count -eq 0)
         {
@@ -151,12 +162,17 @@ try
         }
         $Global:LNFormInfos.Where({ $PSItem.FormName -eq $doc.GetFirstItem("Form").Text })[0].Count++
 
-        $excelSheet_Documents.SetValue($rowCounter, 1, $doc.NoteID)
-        $excelSheet_Documents.SetValue($rowCounter, 2, $doc.UniversalID)
-        $excelSheet_Documents.SetValue($rowCounter, 3, $doc.GetFirstItem("Form").Text)
-        $excelSheet_Documents.SetValue($rowCounter, 4, $doc.NotesURL)
-        $excelSheet_Documents.SetValue($rowCounter, 5, $doc.Created)
-        $excelSheet_Documents.SetValue($rowCounter, 6, $doc.LastModified)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.NoteID)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.UniversalID)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.GetFirstItem("Form").Text)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.NotesURL)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.Created)
+        $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.LastModified)
+
+        foreach ($AddnField in $AdditionalFields)
+        {
+            $excelSheet_Documents.SetValue($rowCounter, ($colCounter++), $doc.GetFirstItem($AddnField).Text)
+        }
         
         $doc = $docCollection.GetNextDocument($doc)
     }
@@ -175,7 +191,13 @@ try
 
     Write-Host "Saving Excel..."
 
-    [string] $xlFilePath = "$($Global:ThisScriptRoot)\DatabaseInfo - $($nDatabase.Title).xlsx"
+    [string] $xlFileName = "DatabaseInfo - $($nDatabase.Title).xlsx"
+    foreach ($c in [System.IO.Path]::GetInvalidFileNameChars())
+    {
+        $xlFileName = $xlFileName.Replace($c, '_')
+    }
+    [string] $xlFilePath = "$($Global:ThisScriptRoot)\$($xlFileName)"
+
     $excelPkg.SaveAs((New-Object System.IO.FileInfo($xlFilePath)))
 
     ################################################################################
