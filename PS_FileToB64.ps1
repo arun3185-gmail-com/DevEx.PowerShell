@@ -1,4 +1,4 @@
-﻿
+
 $srcFilePath = ""
 
 [byte[]] $fileAsBytes = [System.IO.File]::ReadAllBytes($srcFilePath)
