@@ -9,9 +9,14 @@ Import-Module "J:\Arun\Git\DevEx.References\NuGet\microsoft.sharepointonline.cso
 [string] $Username = "B13501@evonik.com"
 [SecureString] $Password = Read-Host "Enter Password for $($Username)" -AsSecureString
 
-[string] $SiteUrl   = "https://evonik.sharepoint.com/sites/10543"
-[string] $ListTitle = "Doku IM-FS-AT/A&S"
+[string] $SiteUrl   = "https://evonik.sharepoint.com/sites/10577"
+[string] $ListTitle = "Changchun Teamdoc"
 #[string] $Global:QstLogFilePath = "C:\ProgramData\Dell\Migrator for Notes to SharePoint\Log Files\NMSP_08_09_2018_10_53_56.log"
+
+[string[]] $GroupsToBeRemoved = @("#ADM_Database_DellQuest_Migrator_Team","#ADM_Database_Developer","#ADM_Database_IS_Admin","#ADM_Database_IS_Support")
+[string[]] $AllowedSiteCollAdminTitles = @("(GA4250 evonik) SharePoint Online - Site collection administrator","GMS_MDL_BS-BP-SiteCollection","SiteCollectionAdmin_O365_EMEA")
+[string[]] $AllowedSiteCollAdminLogins = @("i:0#.f|membership|ga4250@evonik.onmicrosoft.com","c:0t.c|tenant|9c535337-1405-4bc3-9214-494cd2357bcf","c:0t.c|tenant|765575ea-6693-4cd2-a7cf-127878a3f536")
+
 
 [string] $Global:Tab = [char]9
 
@@ -57,21 +62,22 @@ try
     # Files and Folders count
     ################################################################################
     
-    $camlQry = [Microsoft.SharePoint.Client.CamlQuery]::CreateAllItemsQuery()
-    $camlQry.ViewXml = "<View Scope='RecursiveAll'> <Query><Where><Eq> <FieldRef Name='FSObjType' /> <Value Type='Integer'>1</Value> </Eq></Where></Query> </View>"
+    $site = $context.Site
     $web = $context.Web
     $list = $context.Web.Lists.GetByTitle($ListTitle)
-    $listItems = $list.GetItems($camlQry)  
+    $camlQryFolders = [Microsoft.SharePoint.Client.CamlQuery]::CreateAllItemsQuery()
+    $camlQryFolders.ViewXml = "<View Scope='RecursiveAll'> <Query><Where><Eq> <FieldRef Name='FSObjType' /> <Value Type='Integer'>1</Value> </Eq></Where></Query> </View>"
+    $listItemsFolders = $list.GetItems($camlQryFolders)  
+    
+    $context.Load($site)
     $context.Load($web)
     $context.Load($list)
-    $context.Load($listItems)
-
+    $context.Load($listItemsFolders)
     $context.ExecuteQuery()
-    $listFoldersCount = $listItems.Count
     
     Write-Host "Items Count :-"
     Write-Host "   Total Items - $($list.ItemCount)"
-    Write-Host "   Folders Count - $($listFoldersCount)"
+    Write-Host "   Folders Count - $($listItemsFolders.Count)"
     Write-Host ""
     Write-Host ""
 
@@ -79,76 +85,170 @@ try
     # ACL groups to SharePoint Groups
     # AssociatedOwnerGroup, AssociatedMemberGroup, AssociatedVisitorGroup
     ################################################################################
+    
+    <#
+    $userInfoList = $web.SiteUserInfoList
+    $context.Load($userInfoList)
+    $userInfoListFields = $userInfoList.Fields
+    $context.Load($userInfoListFields)
+    $userInfoListItemCollection = $userInfoList.GetItems([Microsoft.SharePoint.Client.CamlQuery]::CreateAllItemsQuery())
+    $context.Load($userInfoListItemCollection)
 
     $webRoleAssignments = $web.RoleAssignments
     $context.Load($webRoleAssignments)
-    $siteGroups = $web.SiteGroups
-    $context.Load($siteGroups)
-    $siteUsers = $web.SiteUsers
-    $context.Load($siteUsers)
-    $userInfoList = $web.SiteUserInfoList
-    $context.Load($userInfoList)
-    $userInfoListItemCollection = $userInfoList.GetItems([Microsoft.SharePoint.Client.CamlQuery]::CreateAllItemsQuery())
-    $context.Load($userInfoListItemCollection)
-    $context.ExecuteQuery()
-    
+    #>
 
+    $webAssociatedOwnerGroup = $web.AssociatedOwnerGroup
+    $webAssociatedMemberGroup = $web.AssociatedMemberGroup
+    $webAssociatedVisitorGroup = $web.AssociatedVisitorGroup
+    $siteGroups = $web.SiteGroups
+    $siteUsers = $web.SiteUsers
+    
+    $context.Load($webAssociatedOwnerGroup)
+    $context.Load($webAssociatedMemberGroup)
+    $context.Load($webAssociatedVisitorGroup)
+    $context.Load($siteGroups)
+    $context.Load($siteUsers)
+
+    $context.ExecuteQuery()
+
+    <#
     foreach ($roleAssgn in $webRoleAssignments)
     {
         $prncpl = $roleAssgn.Member
-
         $context.Load($prncpl)
         $context.ExecuteQuery()
-
         Write-Host "$($roleAssgn.PrincipalId) - $($roleAssgn.Member.PrincipalType) - $($roleAssgn.Member.LoginName)"
     }
+    #>
 
-    Write-Host ""
-    Write-Host ""
     
+    ################################################################################
+    # Remove #ADM Groups, Change owner of other groups to default Owner
+    ################################################################################
+
     foreach ($grp in $siteGroups)
     {
-        Write-Host "$($grp.Id) - $($grp.PrincipalType) - $($grp.LoginName)"
+        if ($grp.LoginName -in $GroupsToBeRemoved)
+        {
+            $siteGroups.RemoveByLoginName($grp.LoginName)
+        }
     }
+    foreach ($grp in $siteGroups)
+    {
+        if ($grp.OwnerTitle -notin @("System Account",$webAssociatedOwnerGroup.LoginName))
+        {
+            Write-Host $grp.LoginName
+            $grp.Owner = $webAssociatedOwnerGroup
+            $grp.Update()
+            $context.Load($grp)
+        }
+    }
+    $context.Load($siteGroups)
+    $context.ExecuteQuery()
 
-    Write-Host ""
-    Write-Host ""
+    ################################################################################
+    # Remove other site collection admins
+    ################################################################################
     
-    foreach ($grp in $siteUsers)
+    foreach ($usr in $siteUsers)
     {
-        Write-Host "$($grp.Id) - $($grp.PrincipalType) - $($grp.LoginName)"
+        if ($usr.IsSiteAdmin)
+        {
+            if ($usr.LoginName -notin $AllowedSiteCollAdminLogins -or $usr.Title -notin $AllowedSiteCollAdminTitles)
+            {
+                $usr.IsSiteAdmin = $false
+                $context.Load($usr)
+            }
+        }
     }
 
-    foreach ($itm in $userInfoListItemCollection)
-    {
-        Write-Host "$($itm.Id) - $($itm["Title"])"
-    }
-
+    $context.ExecuteQuery()
+    
+    
+    ################################################################################
+    # Views, Sorting
+    ################################################################################
+    
+    $listViews = $list.Views
+    $context.Load($listViews)
+    $context.ExecuteQuery()
 
     ################################################################################
     # Left Navigation
     ################################################################################
+    
+    [Microsoft.SharePoint.Client.NavigationNodeCreationInformation] $newQLNodeInfo = $null
+    [Microsoft.SharePoint.Client.NavigationNodeCreationInformation] $newSubNodeInfo = $null
+
     $webNavigation = $web.Navigation
     $quickLaunchColl = $webNavigation.QuickLaunch
-    $context.Load($web)
     $context.Load($webNavigation)
     $context.Load($quickLaunchColl)
 
     $context.ExecuteQuery()
     
-    Write-Host "Quick Launch :-"
-    foreach ($itm in $quickLaunchColl)
+    Write-Host "Working on Quick Launch..."
+    for ($i = ($quickLaunchColl.Count-1); $i -ge 0; $i--)
     {
-        Write-Host ""
-        Write-Host "$($itm.Title) [$($itm.Url)]"
+        Write-Host "Removing - $($quickLaunchColl[$i].Title) [$($quickLaunchColl[$i].Url)]"
+        #Write-LogInfo "Removing - $($quickLaunchColl[$i].Title) [$($quickLaunchColl[$i].Url)]"
+        $quickLaunchColl[$i].DeleteObject()
     }
+    $context.Load($quickLaunchColl)
+    $context.ExecuteQuery()
 
+    ####################
     
-
+    $newQLNodeInfo = New-Object Microsoft.SharePoint.Client.NavigationNodeCreationInformation
+    $newQLNodeInfo.Title = $list.Title
+    $newQLNodeInfo.Url = $listViews.Where({ $PSItem.DefaultView })[0].ServerRelativeUrl
+    
+    $context.Load($quickLaunchColl.Add($newQLNodeInfo))
+    $context.ExecuteQuery()
+    
+    $newSubNodeInfo = New-Object Microsoft.SharePoint.Client.NavigationNodeCreationInformation
+    $newSubNodeInfo.Title = $listViews.Where({ $PSItem.DefaultView })[0].Title
+    $newSubNodeInfo.Url = $listViews.Where({ $PSItem.DefaultView })[0].ServerRelativeUrl
+    
+    $context.Load($quickLaunchColl[0].Children)
+    $context.ExecuteQuery()
+    $context.Load($quickLaunchColl[0].Children.Add($newSubNodeInfo))
+    
+    foreach ($view in $listViews.Where({ -not($PSItem.DefaultView) }))
+    {
+        $newSubNodeInfo = New-Object Microsoft.SharePoint.Client.NavigationNodeCreationInformation
+        $newSubNodeInfo.Title = $view.Title
+        $newSubNodeInfo.Url = $view.ServerRelativeUrl
+        $newSubNodeInfo.AsLastNode = $true
+        $context.Load($quickLaunchColl[0].Children.Add($newSubNodeInfo))
+    }
+    
+    $context.Load($quickLaunchColl)
+    $context.ExecuteQuery()
     
     ################################################################################
-    # Views, Sorting
     # UI improvement webpart
+    $list
+    
+    $listContTypes = $list.ContentTypes
+    $context.Load($listContTypes)
+    $context.ExecuteQuery()
+
+    $pageDispItem = $context.Web.GetFileByServerRelativeUrl("/sites/10577/Lists/Changchun%20Teamdoc/DispForm.aspx")
+    $context.Load($pageDispItem)
+    $context.ExecuteQuery()
+
+    $webPartManager = $pageDispItem.GetLimitedWebPartManager([System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+    $context.Load($webPartManager)
+    $context.ExecuteQuery()
+
+    $webPartDefnCollection = $webPartManager.WebParts
+    $context.Load($webPartDefnCollection)
+    $context.ExecuteQuery()
+
+    
+
     ################################################################################
 
     ################################################################################
