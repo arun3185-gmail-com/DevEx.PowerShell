@@ -1,4 +1,4 @@
-﻿
+
 ################################################################################################################################################################
 # Lotus Notes to SharePoint Migration Automation
 #     Job Sheet Preparation
@@ -10,6 +10,7 @@ Import-Module "J:\LN2SP\References\EPPlus\EPPlus.dll"
 ################################################################################################################################################################
 
 [string[]] $MigrationStatusOptions = @("Preparation","Ready","Migrate","Completed")
+[string[]] $MigrationColumnOptions = @("No", "Yes", "TitleField", "SubFoldersField")
 
 [string] $Global:Tab = [char]9
 [string] $Global:LogTimeFormat  = "[yyyy-MM-dd HH:mm:ss.fff]"
@@ -274,11 +275,13 @@ try
                 }
 
 
-                [OfficeOpenXml.DataValidation.ExcelDataValidationList] $xlDataValidationList = $null
-                
                 $excelSheet_Info.SetValue(10, 1, "Status")
                 
-                $xlDataValidationList = $excelSheet_Info.DataValidations.AddListValidation("B10:B10")
+                [OfficeOpenXml.ExcelAddress] $xlAddrStatusCell = $null
+                [OfficeOpenXml.DataValidation.ExcelDataValidationList] $xlDataValidationList = $null
+                
+                $xlAddrStatusCell = New-Object OfficeOpenXml.ExcelAddress(10, 2, 10, 2)
+                $xlDataValidationList = $excelSheet_Info.DataValidations.AddListValidation($xlAddrStatusCell.Address)
                 foreach ($MigOpt in $MigrationStatusOptions)
                 {
                     $xlDataValidationList.Formula.Values.Add($MigOpt)
