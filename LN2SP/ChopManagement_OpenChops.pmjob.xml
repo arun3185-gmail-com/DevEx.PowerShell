@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TransferJob xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="" Description="" Version="4.0.0.0">
+  <QuerySource xsi:type="NotesQuerySource">
+    <ConnectionString>server='CN=APACASHA01/OU=Server/O=Evonik'; database='database/Compliance/ChopManagement.nsf'; zone=utc</ConnectionString>
+  </QuerySource>
+  <SourceDefinition Name="Chop Management" Description="" Templates="ChopManagement" ListTypes="">
+    <QuerySpec xsi:type="NotesQuerySpec">
+      <EmfConversionFormat />
+      <ReplicaId>48257f32002a31e2</ReplicaId>
+      <UNID />
+      <Column ColumnType="Item" Value="ID" ReturnType="String" />
+      <Column ColumnType="Formula" Value="@If(status=&quot;99&quot;;&quot;Complete&quot;;status=&quot;-1&quot;;&quot;Return&quot;;status=&quot;0&quot;;&quot;New&quot;;status=&quot;1&quot;;&quot;Signatory Approve&quot;;status=&quot;2&quot;;&quot;Chop Manager Approve&quot;;status=&quot;3&quot;;&quot;Chop Manager Complete&quot;;&quot;--&quot;)" Alias="status" />
+      <Column ColumnType="Item" Value="Applicant" ReturnType="String" />
+      <Column ColumnType="Item" Value="TelNo" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblDocumentName" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblAmt" ReturnType="Number" />
+      <Column ColumnType="Item" Value="tblCurrency" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblDocumentSets" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblCounterParty" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblUploadOption" ReturnType="String" />
+      <Column ColumnType="Item" Value="tblIsImportant" ReturnType="Binary" />
+      <Column ColumnType="Item" Value="isImportant" ReturnType="String" />
+      <Column ColumnType="Formula" Value="tblDocumentName[1]" Alias="tblDocumentName1" />
+      <Column ColumnType="Formula" Value="tblDocumentName[2]" Alias="tblDocumentName2" />
+      <Column ColumnType="Formula" Value="tblDocumentName[3]" Alias="tblDocumentName3" />
+      <Column ColumnType="Formula" Value="tblDocumentName[4]" Alias="tblDocumentName4" />
+      <Column ColumnType="Formula" Value="tblDocumentName[5]" Alias="tblDocumentName5" />
+      <Column ColumnType="Formula" Value="tblAmt[1]" Alias="tblAmt1" />
+      <Column ColumnType="Formula" Value="tblAmt[2]" Alias="tblAmt2" />
+      <Column ColumnType="Formula" Value="tblAmt[3]" Alias="tblAmt3" />
+      <Column ColumnType="Formula" Value="tblAmt[4]" Alias="tblAmt4" />
+      <Column ColumnType="Formula" Value="tblAmt[5]" Alias="tblAmt5" />
+      <Column ColumnType="Formula" Value="tblCurrency[1]" Alias="tblCurrency1" />
+      <Column ColumnType="Formula" Value="tblCurrency[2]" Alias="tblCurrency2" />
+      <Column ColumnType="Formula" Value="tblCurrency[3]" Alias="tblCurrency3" />
+      <Column ColumnType="Formula" Value="tblCurrency[4]" Alias="tblCurrency4" />
+      <Column ColumnType="Formula" Value="tblCurrency[5]" Alias="tblCurrency5" />
+      <Column ColumnType="Formula" Value="tblDocumentSets[1]" Alias="tblDocumentSets1" />
+      <Column ColumnType="Formula" Value="tblDocumentSets[2]" Alias="tblDocumentSets2" />
+      <Column ColumnType="Formula" Value="tblDocumentSets[3]" Alias="tblDocumentSets3" />
+      <Column ColumnType="Formula" Value="tblDocumentSets[4]" Alias="tblDocumentSets4" />
+      <Column ColumnType="Formula" Value="tblDocumentSets[5]" Alias="tblDocumentSets5" />
+      <Column ColumnType="Formula" Value="tblCounterParty[1]" Alias="tblCounterParty1" />
+      <Column ColumnType="Formula" Value="tblCounterParty[2]" Alias="tblCounterParty2" />
+      <Column ColumnType="Formula" Value="tblCounterParty[3]" Alias="tblCounterParty3" />
+      <Column ColumnType="Formula" Value="tblCounterParty[4]" Alias="tblCounterParty4" />
+      <Column ColumnType="Formula" Value="tblCounterParty[5]" Alias="tblCounterParty5" />
+      <Column ColumnType="Formula" Value="tblUploadOption[1]" Alias="tblUploadOption1" />
+      <Column ColumnType="Formula" Value="tblUploadOption[2]" Alias="tblUploadOption2" />
+      <Column ColumnType="Formula" Value="tblUploadOption[3]" Alias="tblUploadOption3" />
+      <Column ColumnType="Formula" Value="tblUploadOption[4]" Alias="tblUploadOption4" />
+      <Column ColumnType="Formula" Value="tblUploadOption[5]" Alias="tblUploadOption5" />
+      <Column ColumnType="Formula" Value="tblIsImportant[1]" Alias="tblIsImportant1" ReturnType="Number" />
+      <Column ColumnType="Formula" Value="tblIsImportant[2]" Alias="tblIsImportant2" ReturnType="Number" />
+      <Column ColumnType="Formula" Value="tblIsImportant[3]" Alias="tblIsImportant3" ReturnType="Number" />
+      <Column ColumnType="Formula" Value="tblIsImportant[4]" Alias="tblIsImportant4" ReturnType="Number" />
+      <Column ColumnType="Formula" Value="tblIsImportant[5]" Alias="tblIsImportant5" ReturnType="Number" />
+      <Column ColumnType="Item" Value="SignatoryName" ReturnType="String" Option="Multi" />
+      <Column ColumnType="Formula" Value="SignatoryName[1]" Alias="SignatoryName1" />
+      <Column ColumnType="Formula" Value="SignatoryName[2]" Alias="SignatoryName2" />
+      <Column ColumnType="Item" Value="SignatureRule" ReturnType="String" />
+      <Column ColumnType="Item" Value="SignatureInformation" ReturnType="String" />
+      <Column ColumnType="Item" Value="ChopManager" ReturnType="String" />
+      <Column ColumnType="Item" Value="ChopName" ReturnType="String" />
+      <Column ColumnType="Item" Value="Description" ReturnType="String" />
+      <Column ColumnType="Item" Value="SaveInfo" ReturnType="String" Option="Multi" />
+      <Column ColumnType="Item" Value="FlagDiscard" ReturnType="String" />
+      <Column ColumnType="Item" Value="SubmitDate" ReturnType="Date" />
+      <From />
+      <Forms>fmChop</Forms>
+      <Search />
+      <Formula>status="-1"|status="0"|status="1"|status="2"|status="3"</Formula>
+    </QuerySpec>
+  </SourceDefinition>
+  <SharePointConnection>
+    <Web>https://evonik.sharepoint.com/sites/10125</Web>
+    <List>Open Applications</List>
+  </SharePointConnection>
+  <JobOptions>
+    <DuplicateDocumentHandling>Replace</DuplicateDocumentHandling>
+    <PreserveIdentities>true</PreserveIdentities>
+    <PreserveDates>true</PreserveDates>
+    <QueryOptions xsi:type="NotesRuntimeQueryOptions">
+      <DeleteMigratedDocuments>false</DeleteMigratedDocuments>
+      <ExtractRecurrencePatterns>false</ExtractRecurrencePatterns>
+      <ExtractDocSecurity>true</ExtractDocSecurity>
+    </QueryOptions>
+    <UserMappingOptions>
+      <MappingFailureSubstitution>DefaultIdentity</MappingFailureSubstitution>
+      <UseMappingFailureSubstitutionForUserFields>true</UseMappingFailureSubstitutionForUserFields>
+      <DefaultUserName>sarah.feng@evonik.com</DefaultUserName>
+    </UserMappingOptions>
+    <LinkConversionOptions />
+    <ReUpdateMmFieldByCsom>false</ReUpdateMmFieldByCsom>
+  </JobOptions>
+  <SecurityMapping Enabled="true">
+    <AccessLevelMappings>
+      <AccessLevelMapping NotesAccessLevel="Reader" SharePointPermissionLevel="Read" SharePointGroup="{Visitors}" />
+      <AccessLevelMapping NotesAccessLevel="Author" SharePointPermissionLevel="Read" SharePointGroup="{Visitors}" />
+      <AccessLevelMapping NotesAccessLevel="Editor" SharePointPermissionLevel="Contribute" SharePointGroup="{Members}" />
+      <AccessLevelMapping NotesAccessLevel="Designer" SharePointPermissionLevel="Design" SharePointGroup="{Members}" />
+      <AccessLevelMapping NotesAccessLevel="Manager" SharePointPermissionLevel="Full Control" SharePointGroup="{Owners}" />
+      <AccessLevelMapping NotesAccessLevel="Can Create" />
+      <AccessLevelMapping NotesAccessLevel="Can Delete" />
+    </AccessLevelMappings>
+    <MapACLGroupsAsRoles>true</MapACLGroupsAsRoles>
+    <MapACLRoles>
+      <MapACLRoles>true</MapACLRoles>
+    </MapACLRoles>
+  </SecurityMapping>
+  <SharePointTargetDefinition Name="Custom List" Description="" Templates="Custom List" SharePointTemplates="Custom List">
+    <ExtractIcons>true</ExtractIcons>
+    <MigrateCustomProperties>false</MigrateCustomProperties>
+    <IsDocLib>false</IsDocLib>
+    <IsDiscussion>false</IsDiscussion>
+    <IsEvents>false</IsEvents>
+    <AllowAttachments>true</AllowAttachments>
+    <Field Name="Document Name" Type="Text" NotesItems="DocumentName;Title" IsTitleField="true" InternalName="Title" />
+    <Field Name="ComplianceAssetId" Type="Text" NotesItems="ComplianceAssetId" InternalName="ComplianceAssetId" />
+    <Field Name="Serial No" Type="Text" NotesItems="SerialNo" InternalName="Serial_x0020_No" />
+    <Field Name="Applicant" Type="User" NotesItems="Applicant" InternalName="Applicant" />
+    <Field Name="Tel No" Type="Text" NotesItems="TelNo" InternalName="Tel_x0020_No" />
+    <Field Name="Signature Rule" Type="Choice" NotesItems="SignatureRule" InternalName="Signature_x0020_Rule" />
+    <Field Name="Signature Information" Type="Choice" NotesItems="SignatureInformation" InternalName="Signature_x0020_Information" />
+    <Field Name="Signatories" Type="User" NotesItems="Signatories" InternalName="Signatories" />
+    <Field Name="Signatory1" Type="User" NotesItems="Signatory1" InternalName="Signatory1" />
+    <Field Name="Signatory2" Type="User" NotesItems="Signatory2" InternalName="Signatory2" />
+    <Field Name="Chop Required" Type="Lookup" NotesItems="ChopRequired" AddMissingChoices="true" LookupColumn="Title" InternalName="Chop_x0020_Required">
+      <LookupTarget>
+        <ListName>Chop Managers</ListName>
+      </LookupTarget>
+    </Field>
+    <Field Name="Description" Type="Note" NotesItems="Description" InternalName="Description" />
+    <Field Name="Locked" Type="Boolean" NotesItems="Locked" InternalName="Locked" />
+    <Field Name="Status" Type="Choice" NotesItems="Status" InternalName="Status" />
+    <Field Name="Discarded" Type="Boolean" NotesItems="Discarded" InternalName="Discarded" />
+    <Field Name="Next Approver" Type="User" NotesItems="NextApprover" InternalName="Next_x0020_Approver" />
+    <Field Name="Submit Date" Type="DateTime" NotesItems="SubmitDate" InternalName="Submit_x0020_Date" />
+    <Field Name="Approval Log" Type="Note" NotesItems="ApprovalLog" InternalName="Approval_x0020_Log" />
+    <Field Name="StatusValue" Type="Text" NotesItems="StatusValue" InternalName="StatusValue" />
+    <Field Name="ApplicantValue" Type="Text" NotesItems="ApplicantValue" InternalName="ApplicantValue" />
+    <Field Name="SignatoriesValues" Type="Text" NotesItems="SignatoriesValues" InternalName="SignatoriesValues" />
+    <Field Name="Document Name 1" Type="Text" NotesItems="DocumentName1" InternalName="Document_x0020_Name_x0020_1" />
+    <Field Name="Document Name 2" Type="Text" NotesItems="DocumentName2" InternalName="Document_x0020_Name_x0020_2" />
+    <Field Name="Document Name 3" Type="Text" NotesItems="DocumentName3" InternalName="Document_x0020_Name_x0020_3" />
+    <Field Name="Document Name 4" Type="Text" NotesItems="DocumentName4" InternalName="Document_x0020_Name_x0020_4" />
+    <Field Name="Document Name 5" Type="Text" NotesItems="DocumentName5" InternalName="Document_x0020_Name_x0020_5" />
+    <Field Name="Value 1" Type="Text" NotesItems="Value1" InternalName="Value_x0020_1" />
+    <Field Name="Value 2" Type="Text" NotesItems="Value2" InternalName="Value_x0020_2" />
+    <Field Name="Value 3" Type="Text" NotesItems="Value3" InternalName="Value_x0020_3" />
+    <Field Name="Value 4" Type="Text" NotesItems="Value4" InternalName="Value_x0020_4" />
+    <Field Name="Value 5" Type="Text" NotesItems="Value5" InternalName="Value_x0020_5" />
+    <Field Name="Currency 1" Type="Choice" NotesItems="Currency1" InternalName="Currency_x0020_1" />
+    <Field Name="Currency 2" Type="Choice" NotesItems="Currency2" InternalName="Currency_x0020_2" />
+    <Field Name="Currency 3" Type="Choice" NotesItems="Currency3" InternalName="Currency_x0020_3" />
+    <Field Name="Currency 4" Type="Choice" NotesItems="Currency4" InternalName="Currency_x0020_4" />
+    <Field Name="Currency 5" Type="Choice" NotesItems="Currency5" InternalName="Currency_x0020_5" />
+    <Field Name="Document Sets 1" Type="Text" NotesItems="DocumentSets1" InternalName="Document_x0020_Sets_x0020_1" />
+    <Field Name="Document Sets 2" Type="Text" NotesItems="DocumentSets2" InternalName="Document_x0020_Sets_x0020_2" />
+    <Field Name="Document Sets 3" Type="Text" NotesItems="DocumentSets3" InternalName="Document_x0020_Sets_x0020_3" />
+    <Field Name="Document Sets 4" Type="Text" NotesItems="DocumentSets4" InternalName="Document_x0020_Sets_x0020_4" />
+    <Field Name="Document Sets 5" Type="Text" NotesItems="DocumentSets5" InternalName="Document_x0020_Sets_x0020_5" />
+    <Field Name="Related Counter-Part" Type="Text" NotesItems="RelatedCounter-Party1;RelatedCounter-Part" InternalName="Related_x0020_Counter_x002d_Part" />
+    <Field Name="Related Counter-Part0" Type="Text" NotesItems="RelatedCounter-Party2;RelatedCounter-Part0" InternalName="Related_x0020_Counter_x002d_Part0" />
+    <Field Name="Related Counter-Part1" Type="Text" NotesItems="RelatedCounter-Party3;RelatedCounter-Part1" InternalName="Related_x0020_Counter_x002d_Part1" />
+    <Field Name="Related Counter-Part2" Type="Text" NotesItems="RelatedCounter-Party4;RelatedCounter-Part2" InternalName="Related_x0020_Counter_x002d_Part2" />
+    <Field Name="Related Counter-Part3" Type="Text" NotesItems="RelatedCounter-Party5;RelatedCounter-Part3" InternalName="Related_x0020_Counter_x002d_Part3" />
+    <Field Name="Upload the document_" Type="Choice" NotesItems="Uploadthedocument1;Uploadthedocument_" InternalName="Upload_x0020_the_x0020_document_" />
+    <Field Name="Upload the document_0" Type="Choice" NotesItems="Uploadthedocument2;Uploadthedocument_0" InternalName="Upload_x0020_the_x0020_document_0" />
+    <Field Name="Upload the document_1" Type="Choice" NotesItems="Uploadthedocument3;Uploadthedocument_1" InternalName="Upload_x0020_the_x0020_document_1" />
+    <Field Name="Upload the document_2" Type="Choice" NotesItems="Uploadthedocument4;Uploadthedocument_2" InternalName="Upload_x0020_the_x0020_document_2" />
+    <Field Name="Upload the document_3" Type="Choice" NotesItems="Uploadthedocument5;Uploadthedocument_3" InternalName="Upload_x0020_the_x0020_document_3" />
+    <Field Name="Documents with signi" Type="Boolean" NotesItems="Documentswithsignificantimportance1;Documentswithsigni" InternalName="Documents_x0020_with_x0020_signi" />
+    <Field Name="Documents with signi0" Type="Boolean" NotesItems="Documentswithsignificantimportance2;Documentswithsigni0" InternalName="Documents_x0020_with_x0020_signi0" />
+    <Field Name="Documents with signi1" Type="Boolean" NotesItems="Documentswithsignificantimportance3;Documentswithsigni1" InternalName="Documents_x0020_with_x0020_signi1" />
+    <Field Name="Documents with signi2" Type="Boolean" NotesItems="Documentswithsignificantimportance4;Documentswithsigni2" InternalName="Documents_x0020_with_x0020_signi2" />
+    <Field Name="Documents with signi3" Type="Boolean" NotesItems="Documentswithsignificantimportance5;Documentswithsigni3" InternalName="Documents_x0020_with_x0020_signi3" />
+    <Field Name="Modified" Type="DateTime" NotesItems="Modified" InternalName="Modified" />
+    <Field Name="Created" Type="DateTime" NotesItems="Created" InternalName="Created" />
+    <Field Name="Author" Type="User" NotesItems="CreatedBy;Author" InternalName="Author" />
+    <Field Name="Editor" Type="User" NotesItems="ModifiedBy;Editor" InternalName="Editor" />
+    <Field Name="_UIVersionString" Type="Text" NotesItems="Version;_UIVersionString" InternalName="_UIVersionString" />
+    <Field Name="Attachments" Type="Attachments" NotesItems="Attachments" InternalName="Attachments" />
+    <Field Name="ItemChildCount" Type="Lookup" NotesItems="ItemChildCount" InternalName="ItemChildCount" />
+    <Field Name="FolderChildCount" Type="Lookup" NotesItems="FolderChildCount" InternalName="FolderChildCount" />
+    <Field Name="_ComplianceFlags" Type="Lookup" NotesItems="Labelsetting;_ComplianceFlags" InternalName="_ComplianceFlags" />
+    <Field Name="_ComplianceTag" Type="Lookup" NotesItems="Labels;_ComplianceTag" InternalName="_ComplianceTag" />
+    <Field Name="_ComplianceTagWrittenTime" Type="Lookup" NotesItems="LabelApplied;_ComplianceTagWrittenTime" InternalName="_ComplianceTagWrittenTime" />
+    <Field Name="_ComplianceTagUserId" Type="Lookup" NotesItems="Labelappliedby;_ComplianceTagUserId" InternalName="_ComplianceTagUserId" />
+    <Field Name="AppAuthor" Type="Lookup" NotesItems="AppCreatedBy;AppAuthor" InternalName="AppAuthor" />
+    <Field Name="AppEditor" Type="Lookup" NotesItems="AppModifiedBy;AppEditor" InternalName="AppEditor" />
+    <ViewsOverwriteExisting>false</ViewsOverwriteExisting>
+    <EnableVersioning>false</EnableVersioning>
+  </SharePointTargetDefinition>
+  <Mapping Destination="Serial No" SourceValue="ID" FormatString="" />
+  <Mapping Destination="Status" SourceValue="status" FormatString="" />
+  <Mapping Destination="Applicant" SourceValue="Applicant" FormatString="" />
+  <Mapping Destination="Tel No" SourceValue="TelNo" FormatString="" />
+  <Mapping Destination="Document Name" SourceValue="tblDocumentName" FormatString="" />
+  <Mapping Destination="Document Name 1" SourceValue="tblDocumentName1" FormatString="" />
+  <Mapping Destination="Document Name 2" SourceValue="tblDocumentName2" FormatString="" />
+  <Mapping Destination="Document Name 3" SourceValue="tblDocumentName3" FormatString="" />
+  <Mapping Destination="Document Name 4" SourceValue="tblDocumentName4" FormatString="" />
+  <Mapping Destination="Document Name 5" SourceValue="tblDocumentName5" FormatString="" />
+  <Mapping Destination="Value 1" SourceValue="tblAmt1" FormatString="" />
+  <Mapping Destination="Value 2" SourceValue="tblAmt2" FormatString="" />
+  <Mapping Destination="Value 3" SourceValue="tblAmt3" FormatString="" />
+  <Mapping Destination="Value 4" SourceValue="tblAmt4" FormatString="" />
+  <Mapping Destination="Value 5" SourceValue="tblAmt5" FormatString="" />
+  <Mapping Destination="Currency 1" SourceValue="tblCurrency1" FormatString="" />
+  <Mapping Destination="Currency 2" SourceValue="tblCurrency2" FormatString="" />
+  <Mapping Destination="Currency 3" SourceValue="tblCurrency3" FormatString="" />
+  <Mapping Destination="Currency 4" SourceValue="tblCurrency4" FormatString="" />
+  <Mapping Destination="Currency 5" SourceValue="tblCurrency5" FormatString="" />
+  <Mapping Destination="Document Sets 1" SourceValue="tblDocumentSets1" FormatString="" />
+  <Mapping Destination="Document Sets 2" SourceValue="tblDocumentSets2" FormatString="" />
+  <Mapping Destination="Document Sets 3" SourceValue="tblDocumentSets3" FormatString="" />
+  <Mapping Destination="Document Sets 4" SourceValue="tblDocumentSets4" FormatString="" />
+  <Mapping Destination="Document Sets 5" SourceValue="tblDocumentSets5" FormatString="" />
+  <Mapping Destination="Related Counter-Part" SourceValue="tblCounterParty1" FormatString="" />
+  <Mapping Destination="Related Counter-Part0" SourceValue="tblCounterParty2" FormatString="" />
+  <Mapping Destination="Related Counter-Part1" SourceValue="tblCounterParty3" FormatString="" />
+  <Mapping Destination="Related Counter-Part2" SourceValue="tblCounterParty4" FormatString="" />
+  <Mapping Destination="Related Counter-Part3" SourceValue="tblCounterParty5" FormatString="" />
+  <Mapping Destination="Upload the document_" SourceValue="tblUploadOption1" FormatString="" />
+  <Mapping Destination="Upload the document_0" SourceValue="tblUploadOption2" FormatString="" />
+  <Mapping Destination="Upload the document_1" SourceValue="tblUploadOption3" FormatString="" />
+  <Mapping Destination="Upload the document_2" SourceValue="tblUploadOption4" FormatString="" />
+  <Mapping Destination="Upload the document_3" SourceValue="tblUploadOption5" FormatString="" />
+  <Mapping Destination="Documents with signi" SourceValue="tblIsImportant1" FormatString="" />
+  <Mapping Destination="Documents with signi0" SourceValue="tblIsImportant2" FormatString="" />
+  <Mapping Destination="Documents with signi1" SourceValue="tblIsImportant3" FormatString="" />
+  <Mapping Destination="Documents with signi2" SourceValue="tblIsImportant4" FormatString="" />
+  <Mapping Destination="Documents with signi3" SourceValue="tblIsImportant5" FormatString="" />
+  <Mapping Destination="Signatories" SourceValue="SignatoryName" FormatString="" MultiValueDisposition="All" />
+  <Mapping Destination="Signatory1" SourceValue="SignatoryName1" FormatString="" />
+  <Mapping Destination="Signatory2" SourceValue="SignatoryName2" FormatString="" />
+  <Mapping Destination="Signature Rule" SourceValue="SignatureRule" FormatString="" />
+  <Mapping Destination="Signature Information" SourceValue="SignatureInformation" FormatString="" />
+  <Mapping Destination="Chop Required" SourceValue="ChopName" FormatString="" />
+  <Mapping Destination="Description" SourceValue="Description" FormatString="" />
+  <Mapping Destination="Approval Log" SourceValue="SaveInfo" FormatString="" MultiValueDisposition="All" />
+  <Mapping Destination="Submit Date" SourceValue="SubmitDate" FormatString="" />
+  <Mapping Destination="Discarded" SourceValue="FlagDiscard" FormatString="" />
+</TransferJob>

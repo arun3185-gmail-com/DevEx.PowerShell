@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TransferJob xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="" Description="" Version="4.0.0.0">
+  <QuerySource xsi:type="NotesQuerySource">
+    <ConnectionString>server=''; database=''; zone=utc</ConnectionString>
+  </QuerySource>
+  <SourceDefinition Name="" Description="" Templates="" ListTypes="">
+    <QuerySpec xsi:type="NotesQuerySpec">
+      <EmfConversionFormat />
+      <ReplicaId></ReplicaId>
+      <UNID />
+      <Column ColumnType="Item" Value="unid" ReturnType="String" />
+      <From />
+      <Forms></Forms>
+      <Search />
+      <Formula />
+    </QuerySpec>
+  </SourceDefinition>
+  <SharePointConnection>
+    <Web>https://evonik.sharepoint.com/</Web>
+    <List></List>
+  </SharePointConnection>
+  <JobOptions>
+    <DuplicateDocumentHandling>Replace</DuplicateDocumentHandling>
+    <PreserveIdentities>true</PreserveIdentities>
+    <PreserveDates>true</PreserveDates>
+    <QueryOptions xsi:type="NotesRuntimeQueryOptions">
+      <DeleteMigratedDocuments>false</DeleteMigratedDocuments>
+      <ExtractRecurrencePatterns>false</ExtractRecurrencePatterns>
+      <ExtractDocSecurity>true</ExtractDocSecurity>
+    </QueryOptions>
+    <UserMappingOptions>
+      <MappingFailureSubstitution>DefaultIdentity</MappingFailureSubstitution>
+      <DefaultUserName></DefaultUserName>
+    </UserMappingOptions>
+    <LinkConversionOptions />
+    <ReUpdateMmFieldByCsom>false</ReUpdateMmFieldByCsom>
+  </JobOptions>
+  <SecurityMapping Enabled="true">
+    <AccessLevelMappings>
+      <AccessLevelMapping NotesAccessLevel="Reader" SharePointPermissionLevel="Read" SharePointGroup="{Visitors}" />
+      <AccessLevelMapping NotesAccessLevel="Author" SharePointPermissionLevel="Read" SharePointGroup="{Visitors}" />
+      <AccessLevelMapping NotesAccessLevel="Editor" SharePointPermissionLevel="Contribute" SharePointGroup="{Members}" />
+      <AccessLevelMapping NotesAccessLevel="Designer" SharePointPermissionLevel="Design" SharePointGroup="{Members}" />
+      <AccessLevelMapping NotesAccessLevel="Manager" SharePointPermissionLevel="Full Control" SharePointGroup="{Owners}" />
+      <AccessLevelMapping NotesAccessLevel="Can Create" />
+      <AccessLevelMapping NotesAccessLevel="Can Delete" />
+    </AccessLevelMappings>
+    <MapACLGroupsAsRoles>true</MapACLGroupsAsRoles>
+    <MapACLRoles>
+      <MapACLRoles>true</MapACLRoles>
+    </MapACLRoles>
+  </SecurityMapping>
+  <SharePointTargetDefinition Name="" Description="" Templates="Custom List" SharePointTemplates="Custom List">
+    <ExtractIcons>true</ExtractIcons>
+    <MigrateCustomProperties>false</MigrateCustomProperties>
+    <IsDocLib>false</IsDocLib>
+    <IsDiscussion>false</IsDiscussion>
+    <IsEvents>false</IsEvents>
+    <AllowAttachments>true</AllowAttachments>
+    <Field Name="Modified" Type="DateTime" NotesItems="Modified" InternalName="Modified" />
+    <Field Name="Created" Type="DateTime" NotesItems="Created" InternalName="Created" />
+    <Field Name="Author" Type="User" NotesItems="CreatedBy;Author" InternalName="Author" />
+    <Field Name="Editor" Type="User" NotesItems="ModifiedBy;Editor" InternalName="Editor" />
+    <Field Name="Attachments" Type="Attachments" NotesItems="Attachments" InternalName="Attachments" />
+    <Field Name="ItemChildCount" Type="Lookup" NotesItems="ItemChildCount" InternalName="ItemChildCount" />
+    <Field Name="FolderChildCount" Type="Lookup" NotesItems="FolderChildCount" InternalName="FolderChildCount" />
+    <ViewsOverwriteExisting>false</ViewsOverwriteExisting>
+    <EnableVersioning>false</EnableVersioning>
+  </SharePointTargetDefinition>
+  <Mapping Destination="" SourceValue="" FormatString="" />
+</TransferJob>
