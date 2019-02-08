@@ -153,7 +153,16 @@ try
                 [string] $ServerName = $nDatabase.Server.Split('/')[0]
             
                 $excelPkg = New-Object OfficeOpenXml.ExcelPackage
-                $excelSheet_Info = $excelPkg.Workbook.Worksheets.Add("Info")
+
+                $excelSheet_Info      = $excelPkg.Workbook.Worksheets.Add("Info")
+                $excelSheet_Forms     = $excelPkg.Workbook.Worksheets.Add("Forms")
+                $excelSheet_SourceDef = $excelPkg.Workbook.Worksheets.Add("SourceDef")
+                $excelSheet_DocInfos  = $excelPkg.Workbook.Worksheets.Add("DocInfos")
+
+
+                ################################################################################
+                # Sheet 1 - Info
+                ################################################################################
 
                 $excelSheet_Info.SetValue(1, 1, "Title")
                 $excelSheet_Info.SetValue(1, 2, $nDatabase.Title)
@@ -204,22 +213,24 @@ try
                 $excelSheet_Info.SetValue(9, 1, "Documents Count")
                 $excelSheet_Info.SetValue(9, 2, $docCollection.Count)
 
+
+                ################################################################################
+                # Sheet 2 - Forms
                 ################################################################################
 
-                $excelSheet_Forms = $excelPkg.Workbook.Worksheets.Add("Forms")
-                $rowCounter = 1
-
+                $rowCounter = 0
+                
+                $rowCounter++
                 $excelSheet_Forms.SetValue($rowCounter, 1, "Form Name")
                 $excelSheet_Forms.SetValue($rowCounter, 2, "Docs Count")
-                $rowCounter++
 
                 for ($i = 0; $i -lt $FormInfosList.Count; $i++)
                 {
+                    $rowCounter++
                     $excelSheet_Forms.SetValue($rowCounter, 1, $FormInfosList[$i].FormName)
                     $excelSheet_Forms.SetValue($rowCounter, 2, $FormInfosList[$i].Count)
-                    $rowCounter++
                 }
-            
+                
                 ################################################################################
 
                 $MigFormInfosList = $FormInfosList.Where({ $PSItem.Count -gt 10 -and -not($PSItem.FormName.StartsWith("$")) -and -not($PSItem.FormName.StartsWith("(")) -and -not($PSItem.FormName.StartsWith("_")) })
@@ -256,43 +267,84 @@ try
                 }
                 $SourceDefnColumnsList.Where({ [string]::IsNullOrWhiteSpace($PSItem.FieldTypeName) }).ForEach({ $PSItem.FieldTypeName = [System.Enum]::GetName([LN.NotesItemDataType], $PSItem.FieldTypeNumber) })
                 
+
+                ################################################################################
+                # Sheet 3 - SourceDef
                 ################################################################################
 
-                $excelSheet_SourceDef = $excelPkg.Workbook.Worksheets.Add("SourceDef")
-                $rowCounter = 1
-
+                $rowCounter = 0
+                
+                $rowCounter++
                 $excelSheet_SourceDef.SetValue($rowCounter, 1, "FieldName")
                 $excelSheet_SourceDef.SetValue($rowCounter, 2, "FieldTypeNumber")
                 $excelSheet_SourceDef.SetValue($rowCounter, 3, "FieldTypeName")
-                $rowCounter++
 
                 for ($i = 0; $i -lt $SourceDefnColumnsList.Count; $i++)
                 {
+                    $rowCounter++
                     $excelSheet_SourceDef.SetValue($rowCounter, 1, $SourceDefnColumnsList[$i].FieldName)
                     $excelSheet_SourceDef.SetValue($rowCounter, 2, $SourceDefnColumnsList[$i].FieldTypeNumber)
                     $excelSheet_SourceDef.SetValue($rowCounter, 3, $SourceDefnColumnsList[$i].FieldTypeName)
-                    $rowCounter++
+                    $excelSheet_SourceDef.SetValue($rowCounter, 4, $MigrationColumnOptions[0])
                 }
 
+                [OfficeOpenXml.ExcelAddress] $xlAddrColumnOptsCell = New-Object OfficeOpenXml.ExcelAddress(2, 4, $rowCounter, 4)
+                [OfficeOpenXml.DataValidation.ExcelDataValidationList] $xlColumnOptsDataValidationList = $excelSheet_SourceDef.DataValidations.AddListValidation($xlAddrColumnOptsCell.Address)
+                
+                foreach ($MigOpt in $MigrationColumnOptions)
+                {
+                    $xlColumnOptsDataValidationList.Formula.Values.Add($MigOpt)
+                }
+                $xlColumnOptsDataValidationList.AllowBlank = $false
+
+                ################################################################################
 
                 $excelSheet_Info.SetValue(10, 1, "Status")
+                $excelSheet_Info.SetValue(10, 2, $MigrationStatusOptions[0])
                 
-                [OfficeOpenXml.ExcelAddress] $xlAddrStatusCell = $null
-                [OfficeOpenXml.DataValidation.ExcelDataValidationList] $xlDataValidationList = $null
-                
-                $xlAddrStatusCell = New-Object OfficeOpenXml.ExcelAddress(10, 2, 10, 2)
-                $xlDataValidationList = $excelSheet_Info.DataValidations.AddListValidation($xlAddrStatusCell.Address)
+                [OfficeOpenXml.ExcelAddress] $xlAddrStatusCell = New-Object OfficeOpenXml.ExcelAddress(10, 2, 10, 2)
+                [OfficeOpenXml.DataValidation.ExcelDataValidationList] $xlStatusDataValidationList = $excelSheet_Info.DataValidations.AddListValidation($xlAddrStatusCell.Address)
+
                 foreach ($MigOpt in $MigrationStatusOptions)
                 {
-                    $xlDataValidationList.Formula.Values.Add($MigOpt)
+                    $xlStatusDataValidationList.Formula.Values.Add($MigOpt)
                 }
-                $xlDataValidationList.AllowBlank = $true
+                $xlStatusDataValidationList.AllowBlank = $false
+                
+
+                ################################################################################
+                # Sheet 4 - DocInfos
+                ################################################################################
+
+                $rowCounter = 0
+                
+                $rowCounter++
+                $excelSheet_DocInfos.SetValue($rowCounter, 1, "NoteID")
+                $excelSheet_DocInfos.SetValue($rowCounter, 2, "UniversalID")
+                $excelSheet_DocInfos.SetValue($rowCounter, 3, "Form")
+                $excelSheet_DocInfos.SetValue($rowCounter, 4, "NotesURL")
+                $excelSheet_DocInfos.SetValue($rowCounter, 5, "Created")
+                $excelSheet_DocInfos.SetValue($rowCounter, 6, "LastModified")
+
+                for ($i = 0; $i -lt $DocInfosList.Count; $i++)
+                {
+                    $rowCounter++
+                    $excelSheet_DocInfos.SetValue($rowCounter, 1, $DocInfosList[$i].NoteID)
+                    $excelSheet_DocInfos.SetValue($rowCounter, 2, $DocInfosList[$i].UniversalID)
+                    $excelSheet_DocInfos.SetValue($rowCounter, 3, $DocInfosList[$i].Form)
+                    $excelSheet_DocInfos.SetValue($rowCounter, 4, $DocInfosList[$i].NotesURL)
+                    $excelSheet_DocInfos.SetValue($rowCounter, 5, $DocInfosList[$i].Created)
+                    $excelSheet_DocInfos.SetValue($rowCounter, 6, $DocInfosList[$i].LastModified)
+                }
 
 
+                ################################################################################
 
                 <#
                 Add data validation formula.
                 #>
+
+                ################################################################################
 
                 $excelSheet_Info.Cells[1, 1, 10, 2].AutoFitColumns()
 
